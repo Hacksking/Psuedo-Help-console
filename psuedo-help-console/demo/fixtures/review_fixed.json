@@ -1,0 +1,14 @@
+{
+  "summary": "This PR fixes previous security vulnerabilities by switching to parameterized queries to prevent SQL injection and loading credentials from environment variables.",
+  "findings": [
+    {
+      "severity": "low",
+      "file": "app.py",
+      "line": 11,
+      "title": "Consider adding input validation for search query length",
+      "explanation": "While parameterized queries effectively prevent SQL injection, adding length and character restrictions on user input helps protect database query execution and caching resources.",
+      "suggested_fix": "if len(query) > 100:\n    raise HTTPException(status_code=400, detail='Query too long')",
+      "confidence": 0.85
+    }
+  ]
+}

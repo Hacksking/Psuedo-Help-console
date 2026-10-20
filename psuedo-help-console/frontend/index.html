@@ -1,0 +1,2973 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="apple-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevGate — Live GitHub Monitor, CI/CD Gate & Gemini AI Scanner</title>
+    <meta name="description" content="Next-gen DevOps console: custom GitHub webhook monitoring, real-time push & PR verification, code & syntax breakdown by file/language/function, and Google Gemini AI diagnostic reports.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================================
+           APPLE-INSPIRED MODERN DESIGN SYSTEM
+           ======================================================== */
+        :root {
+            --bg-canvas: #000000;
+            --bg-surface: #0c0d12;
+            --bg-elevated: #161821;
+            --bg-card: rgba(22, 24, 33, 0.72);
+            --bg-glass: rgba(16, 18, 27, 0.75);
+            --bg-dock: rgba(20, 22, 31, 0.85);
+
+            --border-dim: rgba(255, 255, 255, 0.08);
+            --border-subtle: rgba(255, 255, 255, 0.14);
+            --border-bright: rgba(255, 255, 255, 0.24);
+
+            --text-main: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-muted: #6e6e73;
+            --text-dim: #48484a;
+
+            --apple-blue: #0071e3;
+            --apple-cyan: #2997ff;
+            --apple-cyan-bg: rgba(41, 151, 255, 0.12);
+            --apple-cyan-border: rgba(41, 151, 255, 0.32);
+
+            --apple-green: #30d158;
+            --apple-green-bg: rgba(48, 209, 88, 0.12);
+            --apple-green-border: rgba(48, 209, 88, 0.32);
+
+            --apple-red: #ff375f;
+            --apple-red-bg: rgba(255, 55, 95, 0.12);
+            --apple-red-border: rgba(255, 55, 95, 0.35);
+
+            --apple-orange: #ff9f0a;
+            --apple-orange-bg: rgba(255, 159, 10, 0.12);
+            --apple-orange-border: rgba(255, 159, 10, 0.32);
+
+            --apple-purple: #bf5af2;
+            --apple-purple-bg: rgba(191, 90, 242, 0.12);
+            --apple-purple-border: rgba(191, 90, 242, 0.32);
+
+            --radius-xs: 6px;
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 22px;
+            --radius-xl: 30px;
+            --radius-full: 9999px;
+
+            --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+
+            --shadow-subtle: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-float: 0 20px 48px -10px rgba(0, 0, 0, 0.7);
+            --shadow-glow-cyan: 0 0 35px rgba(41, 151, 255, 0.25);
+            --shadow-glow-red: 0 0 35px rgba(255, 55, 95, 0.25);
+            --shadow-glow-green: 0 0 35px rgba(48, 209, 88, 0.25);
+
+            --spring-fast: cubic-bezier(0.16, 1, 0.3, 1);
+            --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        [data-theme="classic"] {
+            --bg-canvas: #0d1117;
+            --bg-surface: #161b22;
+            --bg-elevated: #21262d;
+            --bg-card: #161b22;
+            --bg-glass: #161b22;
+            --bg-dock: #161b22;
+            --border-dim: #30363d;
+            --border-subtle: #484f58;
+            --border-bright: #6e7681;
+            --text-main: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --shadow-glow-cyan: none;
+            --shadow-glow-red: none;
+            --shadow-glow-green: none;
+            --radius-xs: 3px;
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            line-height: 1.5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.011em;
+        }
+
+        .mono { font-family: var(--font-mono); }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -150px;
+            left: 15%;
+            width: 700px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(41, 151, 255, 0.08) 0%, rgba(191, 90, 242, 0.04) 50%, transparent 80%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+        .icon {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        .icon-sm { width: 12px; height: 12px; }
+        .icon-lg { width: 18px; height: 18px; }
+
+        /* ========================================================
+           HEADER & NAVIGATION DOCK
+           ======================================================== */
+        header {
+            position: relative;
+            z-index: 40;
+            background-color: var(--bg-glass);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 0.65rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(24px) saturate(190%);
+            flex-shrink: 0;
+            gap: 1.25rem;
+        }
+
+        .brand-cluster {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .brand-symbol {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(145deg, #1d1e2c 0%, #0d0e15 100%);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            transition: transform 0.25s var(--spring-bounce);
+        }
+        .brand-cluster:hover .brand-symbol { transform: scale(1.05); }
+
+        .brand-title { display: flex; align-items: baseline; gap: 0.5rem; }
+        .brand-title h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.03em; color: var(--text-main); }
+
+        .brand-pill {
+            font-size: 0.62rem;
+            font-family: var(--font-mono);
+            padding: 0.15rem 0.45rem;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--apple-cyan);
+            border: 1px solid rgba(41, 151, 255, 0.3);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .dock-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            background: var(--bg-dock);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-full);
+            padding: 0.25rem 0.35rem;
+            backdrop-filter: blur(20px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .dock-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--radius-full);
+            font-size: 0.77rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s var(--spring-fast);
+            white-space: nowrap;
+        }
+        .dock-item:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.06); }
+        .dock-item.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .dock-item.highlight-monitor.active {
+            color: #67e8f9;
+            border-color: rgba(41, 151, 255, 0.4);
+            background: rgba(41, 151, 255, 0.14);
+        }
+
+        .dock-count-badge {
+            font-size: 0.62rem;
+            font-family: var(--font-mono);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            padding: 0.08rem 0.35rem;
+            border-radius: var(--radius-full);
+        }
+        .dock-item.active .dock-count-badge {
+            background: var(--apple-cyan);
+            color: #000;
+            font-weight: 700;
+        }
+
+        .header-tools { display: flex; align-items: center; gap: 0.65rem; }
+
+        .badge-status-pill {
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+        .badge-status-pill.simulate { background: var(--apple-purple-bg); color: #d8b4fe; border: 1px solid var(--apple-purple-border); }
+        .badge-status-pill.live { background: var(--apple-green-bg); color: #86efac; border: 1px solid var(--apple-green-border); }
+
+        .pulse-indicator {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 10px currentColor;
+            animation: pulse-ring 1.8s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(0.95); opacity: 1; }
+        }
+
+        .apple-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.42rem 0.95rem;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s var(--spring-fast);
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .apple-btn:active { transform: scale(0.97); }
+
+        .btn-ghost { background: rgba(255, 255, 255, 0.06); color: var(--text-secondary); border-color: var(--border-dim); }
+        .btn-ghost:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.12); border-color: var(--border-subtle); }
+
+        .btn-accent {
+            background: linear-gradient(180deg, #0077ed 0%, #0062c4 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 119, 237, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        .btn-accent:hover { background: linear-gradient(180deg, #1a88f7 0%, #006bd7 100%); box-shadow: 0 4px 16px rgba(0, 119, 237, 0.55); }
+
+        .btn-bad-action { background: rgba(255, 55, 95, 0.14); color: #ff7597; border: 1px solid var(--apple-red-border); }
+        .btn-bad-action:hover { background: var(--apple-red); color: #fff; box-shadow: 0 4px 16px rgba(255, 55, 95, 0.4); transform: translateY(-1px); }
+
+        .btn-fix-action { background: rgba(48, 209, 88, 0.14); color: #79e895; border: 1px solid var(--apple-green-border); }
+        .btn-fix-action:hover { background: var(--apple-green); color: #000; box-shadow: 0 4px 16px rgba(48, 209, 88, 0.4); transform: translateY(-1px); }
+
+        .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.74rem; }
+
+        /* ========================================================
+           LAYOUT & SIDEBAR
+           ======================================================== */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-shrink: 0;
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar-header {
+            padding: 1rem 1.25rem 0.65rem 1.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .runs-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.65rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            list-style: none;
+        }
+
+        .run-card {
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-md);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            cursor: pointer;
+            transition: all 0.2s var(--spring-fast);
+            position: relative;
+            overflow: hidden;
+        }
+        .run-card:hover { border-color: var(--border-bright); background: rgba(30, 33, 46, 0.85); transform: translateY(-1px); }
+        .run-card.active {
+            border-color: var(--apple-cyan);
+            background: rgba(41, 151, 255, 0.08);
+            box-shadow: 0 0 0 1px var(--apple-cyan), var(--shadow-glow-cyan);
+        }
+
+        .run-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.35rem; }
+        .run-card-title { font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .run-card-meta { display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+        .outcome-badge {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .outcome-badge.pass { background: var(--apple-green-bg); color: #6ee7b7; border: 1px solid var(--apple-green-border); }
+        .outcome-badge.fail { background: var(--apple-red-bg); color: #fda4af; border: 1px solid var(--apple-red-border); }
+        .outcome-badge.warn { background: var(--apple-orange-bg); color: #fde047; border: 1px solid var(--apple-orange-border); }
+        .outcome-badge.running { background: var(--apple-cyan-bg); color: #7dd3fc; border: 1px solid var(--apple-cyan-border); }
+        .outcome-badge.pending { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); border: 1px solid var(--border-dim); }
+
+        .view-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-canvas);
+        }
+
+        .tab-panel {
+            flex: 1;
+            padding: 1.5rem 2rem 3rem 2rem;
+            overflow-y: auto;
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+            animation: apple-fade 0.25s var(--spring-fast);
+        }
+        @keyframes apple-fade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hero Action Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(22, 24, 33, 0.95) 0%, rgba(12, 14, 20, 0.85) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.6rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            box-shadow: var(--shadow-subtle), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner-title { font-size: 0.92rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+        .hero-banner-desc { font-size: 0.8rem; color: var(--text-secondary); }
+        .hero-controls { display: flex; align-items: center; gap: 0.6rem; z-index: 2; }
+
+        /* Bento Grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .bento-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-subtle), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.2s var(--spring-fast);
+            position: relative;
+            overflow: hidden;
+        }
+        .bento-card:hover { border-color: var(--border-bright); transform: translateY(-2px); background: rgba(28, 30, 42, 0.8); }
+        .bento-card-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+        .bento-card-value { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text-main); display: flex; align-items: baseline; gap: 0.4rem; }
+        .bento-card-sub { font-size: 0.74rem; color: var(--text-secondary); }
+
+        .run-header-title-box { margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; }
+        .run-header-title-box h2 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.025em; color: var(--text-main); margin-bottom: 0.4rem; }
+        .run-pills-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); }
+        .run-pill-tag { background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border-dim); padding: 0.2rem 0.6rem; border-radius: var(--radius-full); }
+
+        .gate-card-hero {
+            border-radius: var(--radius-lg);
+            padding: 1.35rem 1.6rem;
+            margin-bottom: 1.75rem;
+            border: 1px solid var(--border-dim);
+            border-left: 6px solid var(--apple-cyan);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-subtle);
+            transition: all 0.3s ease;
+        }
+        .gate-card-hero.pass { border-left-color: var(--apple-green); background: linear-gradient(135deg, rgba(48, 209, 88, 0.08) 0%, rgba(22, 24, 33, 0.95) 100%); box-shadow: var(--shadow-glow-green); }
+        .gate-card-hero.fail { border-left-color: var(--apple-red); background: linear-gradient(135deg, rgba(255, 55, 95, 0.09) 0%, rgba(22, 24, 33, 0.95) 100%); box-shadow: var(--shadow-glow-red); }
+        .gate-card-hero.warn { border-left-color: var(--apple-orange); background: linear-gradient(135deg, rgba(255, 159, 10, 0.08) 0%, rgba(22, 24, 33, 0.95) 100%); }
+
+        .gate-hero-headline { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
+        .gate-card-hero.pass .gate-hero-headline { color: #6ee7b7; }
+        .gate-card-hero.fail .gate-hero-headline { color: #fda4af; }
+        .gate-card-hero.warn .gate-hero-headline { color: #fde047; }
+        .gate-reasons-list { list-style: none; display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.65rem; }
+        .gate-reason-item { font-size: 0.86rem; color: var(--text-main); display: flex; align-items: baseline; gap: 0.5rem; }
+
+        .section-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.85rem; display: flex; align-items: center; justify-content: space-between; }
+        .timeline-stack { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.75rem; }
+
+        .apple-step-row {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.15rem;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            gap: 1rem;
+            backdrop-filter: blur(12px);
+            transition: all 0.2s var(--spring-fast);
+        }
+        .apple-step-row:hover { border-color: var(--border-bright); background: rgba(30, 33, 46, 0.75); }
+        .apple-step-row.running { border-color: var(--apple-cyan); background: rgba(41, 151, 255, 0.06); box-shadow: 0 0 16px rgba(41, 151, 255, 0.15); }
+
+        .step-bubble { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+        .step-bubble.running { background: var(--apple-cyan-bg); color: var(--apple-cyan); animation: spin 1.1s linear infinite; }
+        .step-bubble.passed { background: var(--apple-green-bg); color: #6ee7b7; }
+        .step-bubble.failed { background: var(--apple-red-bg); color: #fda4af; }
+        .step-bubble.skipped { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+        .step-bubble.pending { background: rgba(255, 255, 255, 0.04); color: var(--text-dim); }
+
+        .step-details-left { flex: 1; display: flex; flex-direction: column; }
+        .step-name-text { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+        .step-msg-text { font-size: 0.78rem; color: var(--text-secondary); }
+        .step-actions-right { display: flex; align-items: center; gap: 0.75rem; }
+        .step-timing-badge { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); }
+
+        .findings-stack { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.75rem; }
+        .finding-bento-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-md);
+            padding: 1.15rem 1.35rem;
+            backdrop-filter: blur(14px);
+            border-left: 5px solid var(--apple-cyan);
+            transition: all 0.2s var(--spring-fast);
+        }
+        .finding-bento-card.critical { border-left-color: var(--apple-red); }
+        .finding-bento-card.high { border-left-color: var(--apple-orange); }
+        .finding-bento-card.medium { border-left-color: var(--apple-purple); }
+        .finding-bento-card.low { border-left-color: var(--apple-cyan); }
+
+        .finding-head-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+        .finding-tag-pill { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 800; padding: 0.18rem 0.55rem; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.05em; }
+        .finding-tag-pill.critical { background: var(--apple-red-bg); color: #fda4af; border: 1px solid var(--apple-red-border); }
+        .finding-tag-pill.high { background: var(--apple-orange-bg); color: #fde047; border: 1px solid var(--apple-orange-border); }
+        .finding-tag-pill.medium { background: var(--apple-purple-bg); color: #d8b4fe; border: 1px solid var(--apple-purple-border); }
+        .finding-tag-pill.low { background: var(--apple-cyan-bg); color: #7dd3fc; border: 1px solid var(--apple-cyan-border); }
+        .finding-headline { font-size: 0.98rem; font-weight: 700; color: var(--text-main); }
+        .finding-loc-badge { font-family: var(--font-mono); font-size: 0.72rem; color: var(--apple-cyan); background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border-dim); padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); }
+        .finding-narrative { font-size: 0.86rem; color: var(--text-secondary); margin-bottom: 0.85rem; line-height: 1.55; }
+
+        .code-fix-box {
+            position: relative;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            padding: 0.85rem 1rem;
+            overflow-x: auto;
+        }
+        .code-fix-box pre { font-family: var(--font-mono); font-size: 0.8rem; color: #7dd3fc; white-space: pre-wrap; word-break: break-word; }
+
+        /* Terminals */
+        .terminal-window {
+            background: #0a0b10;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-float);
+            height: calc(100vh - 145px);
+        }
+
+        .terminal-header {
+            padding: 0.75rem 1.25rem;
+            background: rgba(22, 24, 33, 0.95);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .terminal-traffic-lights { display: flex; align-items: center; gap: 7px; }
+        .traffic-light { width: 11px; height: 11px; border-radius: 50%; }
+        .traffic-light.close { background: #ff5f56; }
+        .traffic-light.minimize { background: #ffbd2e; }
+        .traffic-light.maximize { background: #27c93f; }
+        .terminal-title-text { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); font-family: var(--font-mono); display: flex; align-items: center; gap: 0.45rem; }
+
+        .terminal-search-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-full);
+            padding: 0.35rem 0.85rem;
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            color: var(--text-main);
+            outline: none;
+            width: 220px;
+            transition: all 0.2s ease;
+        }
+        .terminal-search-box:focus { border-color: var(--apple-cyan); box-shadow: 0 0 0 1px var(--apple-cyan); }
+
+        .filter-pill-btn {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-full);
+            background: transparent;
+            border: 1px solid var(--border-dim);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .filter-pill-btn:hover { color: var(--text-main); border-color: var(--border-bright); }
+        .filter-pill-btn.active { background: var(--apple-cyan-bg); color: var(--apple-cyan); border-color: var(--apple-cyan-border); font-weight: 700; }
+
+        .terminal-body {
+            flex: 1;
+            padding: 0.85rem 1.25rem;
+            background: #06070a;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            line-height: 1.65;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .terminal-line { display: flex; align-items: baseline; gap: 0.75rem; padding: 0.2rem 0.4rem; border-radius: var(--radius-xs); transition: background 0.1s ease; }
+        .terminal-line:hover { background: rgba(255, 255, 255, 0.04); }
+        .line-ts { color: var(--text-muted); font-size: 0.7rem; flex-shrink: 0; user-select: none; }
+        .line-badge { font-size: 0.62rem; font-weight: 800; padding: 0.08rem 0.35rem; border-radius: 3px; text-transform: uppercase; flex-shrink: 0; }
+        .line-badge.success { background: var(--apple-green-bg); color: #6ee7b7; }
+        .line-badge.error { background: var(--apple-red-bg); color: #fda4af; }
+        .line-badge.warn { background: var(--apple-orange-bg); color: #fde047; }
+        .line-badge.info { background: var(--apple-cyan-bg); color: #7dd3fc; }
+        .line-badge.debug { background: var(--apple-purple-bg); color: #d8b4fe; }
+        .line-scope { color: var(--text-secondary); font-weight: 600; flex-shrink: 0; }
+        .line-text { color: var(--text-main); flex: 1; word-break: break-all; }
+        .line-text.highlight-error { color: #fca5a5; font-weight: 600; }
+        .line-text.highlight-success { color: #86efac; }
+        .line-text.highlight-warn { color: #fef08a; }
+
+        /* Flowcharts */
+        .flowchart-bento { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: var(--radius-lg); padding: 1.75rem 2rem; box-shadow: var(--shadow-subtle); overflow-x: auto; }
+        .flow-switch-bar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem; }
+        .flow-node-box {
+            background: var(--bg-elevated);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.95rem 1.35rem;
+            min-width: 190px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s var(--spring-bounce);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .flow-node-box:hover { transform: translateY(-3px) scale(1.02); border-color: var(--apple-cyan); box-shadow: 0 8px 24px rgba(41, 151, 255, 0.25); }
+        .flow-node-box.active-running { border-color: var(--apple-cyan); box-shadow: var(--shadow-glow-cyan); background: rgba(41, 151, 255, 0.08); }
+        .flow-node-box.active-pass { border-color: var(--apple-green); background: rgba(48, 209, 88, 0.08); }
+        .flow-node-box.active-fail { border-color: var(--apple-red); box-shadow: var(--shadow-glow-red); background: rgba(255, 55, 95, 0.08); }
+        .node-label-title { font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem; }
+        .node-label-sub { font-size: 0.72rem; color: var(--text-secondary); }
+        .flow-stem {
+            width: 2px;
+            height: 28px;
+            background: linear-gradient(180deg, var(--border-bright) 0%, var(--border-dim) 100%);
+            margin: 0 auto;
+            position: relative;
+        }
+        .flow-stem::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: -4px;
+            border-width: 5px 5px 0 5px;
+            border-style: solid;
+            border-color: var(--border-bright) transparent transparent transparent;
+        }
+
+        /* ========================================================
+           CUSTOM GITHUB MONITOR & GEMINI SCANNER STYLING
+           ======================================================== */
+        .monitor-layout-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-lg);
+            padding: 1.35rem 1.6rem;
+            box-shadow: var(--shadow-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .config-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .input-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .apple-input-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.85rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.15s ease;
+            width: 100%;
+        }
+        .apple-input-box:focus {
+            border-color: var(--apple-cyan);
+            box-shadow: 0 0 0 1px var(--apple-cyan);
+        }
+
+        .copy-snippet-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-dim);
+            border-radius: var(--radius-sm);
+            padding: 0.4rem 0.75rem;
+        }
+        .snippet-val {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: #7dd3fc;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Language Breakdown Bar */
+        .lang-progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            display: flex;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 0.6rem 0;
+        }
+        .lang-segment { height: 100%; }
+        .lang-pills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .lang-pill {
+            font-size: 0.72rem;
+            font-family: var(--font-mono);
+            padding: 0.15rem 0.55rem;
+            border-radius: var(--radius-full);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-dim);
+            color: var(--text-secondary);
+        }
+        .lang-color-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        /* Gemini AI Report Card */
+        .gemini-report-card {
+            background: linear-gradient(135deg, rgba(22, 24, 33, 0.95) 0%, rgba(10, 15, 26, 0.95) 100%);
+            border: 1px solid rgba(41, 151, 255, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.75rem;
+            box-shadow: 0 10px 32px rgba(41, 151, 255, 0.12);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        .gemini-report-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #2997ff 0%, #bf5af2 50%, #30d158 100%);
+        }
+
+        .gemini-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        /* Diff Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(16px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1.5rem; }
+        .modal-overlay.open { display: flex; }
+        .modal-apple-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); width: 100%; max-width: 920px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow-float); overflow: hidden; }
+        .modal-header-apple { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-dim); display: flex; align-items: center; justify-content: space-between; background: var(--bg-elevated); }
+        .diff-code-window { padding: 1.25rem; overflow-y: auto; flex: 1; background: #08090d; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.6; }
+        .diff-code-line { display: block; padding: 0.12rem 0.5rem; border-radius: 3px; }
+        .diff-code-line.add { background: rgba(48, 209, 88, 0.14); color: #86efac; }
+        .diff-code-line.del { background: rgba(255, 55, 95, 0.14); color: #fca5a5; }
+        .diff-code-line.meta { color: #a78bfa; font-weight: 700; }
+
+        .apple-toast-stack { position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 200; display: flex; flex-direction: column; gap: 0.6rem; pointer-events: none; }
+        .apple-toast { background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: var(--text-main); padding: 0.75rem 1.2rem; border-radius: var(--radius-full); font-size: 0.84rem; font-weight: 500; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5); display: flex; align-items: center; gap: 0.55rem; animation: toast-spring 0.35s var(--spring-bounce); pointer-events: auto; }
+        @keyframes toast-spring { from { transform: translateY(25px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        @media (max-width: 900px) {
+            .workspace { flex-direction: column; }
+            .sidebar { width: 100%; height: 210px; border-right: none; border-bottom: 1px solid var(--border-dim); }
+            .bento-grid { grid-template-columns: repeat(2, 1fr); }
+            .monitor-layout-grid { grid-template-columns: 1fr; }
+            .dock-nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand-cluster" onclick="switchView('dashboard')">
+            <div class="brand-symbol">
+                <svg class="icon icon-lg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            </div>
+            <div class="brand-title">
+                <h1>DevGate</h1>
+                <span class="brand-pill">AI GATEWAY v3</span>
+            </div>
+        </div>
+
+        <!-- Apple-Grade Dock Navigation -->
+        <nav class="dock-nav">
+            <button id="dock-dashboard" class="dock-item active" onclick="switchView('dashboard')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>Dashboard</span>
+            </button>
+            <button id="dock-monitor" class="dock-item highlight-monitor" onclick="switchView('monitor')">
+                <span class="pulse-indicator" style="width:6px; height:6px;"></span>
+                <span>Live GitHub Monitor</span>
+            </button>
+            <button id="dock-checks" class="dock-item" onclick="switchView('checks')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span>Check Logs</span>
+                <span class="dock-count-badge" id="badge-check-count">0</span>
+            </button>
+            <button id="dock-pr" class="dock-item" onclick="switchView('pr')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><line x1="6" y1="9" x2="6" y2="21"></line></svg>
+                <span>PR Logs</span>
+                <span class="dock-count-badge" id="badge-pr-count">0</span>
+            </button>
+            <button id="dock-gateway" class="dock-item" onclick="switchView('gateway')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                <span>Gateway Logs</span>
+                <span class="dock-count-badge" id="badge-gw-count">0</span>
+            </button>
+            <button id="dock-flow" class="dock-item" onclick="switchView('flow')">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="6" height="6" rx="1"></rect><rect x="15" y="3" width="6" height="6" rx="1"></rect><rect x="9" y="15" width="6" height="6" rx="1"></rect><path d="M6 9v3a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V9"></path></svg>
+                <span>Flow Charts</span>
+            </button>
+        </nav>
+
+        <!-- Right Header Tools -->
+        <div class="header-tools">
+            <button id="btn-theme-switch" class="apple-btn btn-ghost btn-sm" onclick="toggleTheme()">
+                <span id="theme-label-text">Classic UI</span>
+            </button>
+            <span class="badge-status-pill simulate" id="mode-badge">
+                <span class="pulse-indicator"></span>
+                <span id="mode-text">SIMULATE</span>
+            </span>
+            <button class="apple-btn btn-ghost btn-sm" onclick="handleReset()">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <span>Reset</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- App Body -->
+    <div class="workspace">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span>Pull Request Runs</span>
+                <span id="runs-count" style="font-weight: 500; color: var(--text-muted);">0</span>
+            </div>
+            <ul id="runs-list" class="runs-list"></ul>
+        </aside>
+
+        <!-- Viewports Container -->
+        <div class="view-container">
+
+            <!-- ==========================================
+                 TAB 1: APPLE-GRADE DASHBOARD
+                 ========================================== -->
+            <div id="view-dashboard" class="tab-panel active">
+                <div class="hero-banner">
+                    <div>
+                        <div class="hero-banner-title">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--apple-cyan);"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                            <span>Gateway Simulation Console</span>
+                        </div>
+                        <div class="hero-banner-desc">Simulate live pull requests with real security flaws and automated quality gate enforcement</div>
+                    </div>
+                    <div class="hero-controls">
+                        <button class="apple-btn btn-bad-action" onclick="triggerSimulateBad()">
+                            <span>🚨</span> Simulate Bad PR
+                        </button>
+                        <button class="apple-btn btn-fix-action" onclick="triggerSimulateFixed()">
+                            <span>✨</span> Simulate Fixed PR
+                        </button>
+                        <button class="apple-btn btn-accent btn-sm" onclick="switchView('monitor')">
+                            <span>📡</span> Live Webhook Setup
+                        </button>
+                        <button class="apple-btn btn-ghost" onclick="openDiffModal()">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            <span>Inspect Diff</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="empty-state" style="text-align:center; padding: 4.5rem 1rem;">
+                    <div style="font-size: 3.5rem; margin-bottom: 0.85rem;">🛡️</div>
+                    <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">No active PR pipeline runs</h3>
+                    <p style="color: var(--text-secondary); max-width: 460px; margin: 0 auto 1.75rem auto; font-size: 0.9rem;">
+                        Trigger a simulation or configure your live GitHub webhook in the <b>Live GitHub Monitor</b> tab.
+                    </p>
+                    <div style="display:flex; justify-content:center; gap: 0.75rem;">
+                        <button class="apple-btn btn-bad-action" onclick="triggerSimulateBad()">🚨 Run Bad PR Simulation</button>
+                        <button class="apple-btn btn-fix-action" onclick="triggerSimulateFixed()">✨ Run Fix Simulation</button>
+                        <button class="apple-btn btn-accent" onclick="switchView('monitor')">📡 Open Live GitHub Monitor</button>
+                    </div>
+                </div>
+
+                <div id="run-detail-content" style="display:none;">
+                    <div class="bento-grid">
+                        <div class="bento-card">
+                            <span class="bento-card-label">Pipeline Steps</span>
+                            <span class="bento-card-value" id="kpi-steps">7/7</span>
+                            <span class="bento-card-sub">All verification stages</span>
+                        </div>
+                        <div class="bento-card">
+                            <span class="bento-card-label">Security Findings</span>
+                            <span class="bento-card-value" id="kpi-findings" style="color:var(--apple-red);">0</span>
+                            <span class="bento-card-sub">AI & Static Vulnerabilities</span>
+                        </div>
+                        <div class="bento-card">
+                            <span class="bento-card-label">Quality Gate</span>
+                            <span class="bento-card-value" id="kpi-gate-verdict">—</span>
+                            <span class="bento-card-sub" id="kpi-gate-sub">Evaluating policies</span>
+                        </div>
+                        <div class="bento-card">
+                            <span class="bento-card-label">Duration</span>
+                            <span class="bento-card-value" id="kpi-duration">—</span>
+                            <span class="bento-card-sub">Real-time SSE event pipeline</span>
+                        </div>
+                    </div>
+
+                    <div class="run-header-title-box">
+                        <div>
+                            <h2 id="run-title">PR #42: Feature analysis</h2>
+                            <div class="run-pills-row">
+                                <span class="run-pill-tag mono" id="run-author">author: alice</span>
+                                <span class="run-pill-tag mono" id="run-sha">sha: a1b2c3d</span>
+                                <span class="run-pill-tag mono" id="run-time">time: --</span>
+                                <span class="run-pill-tag mono" id="run-mode">mode: simulate</span>
+                            </div>
+                        </div>
+                        <button id="btn-explain-failure" class="apple-btn btn-ghost" onclick="handleExplainFailure()" style="display:none;">
+                            <span>🤖</span> Explain Failure with Claude
+                        </button>
+                    </div>
+
+                    <div id="explain-box" style="display:none; background:rgba(0, 113, 227, 0.08); border:1px solid rgba(0, 113, 227, 0.3); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem;">
+                        <div style="font-size:0.9rem; font-weight:700; color:var(--apple-cyan); margin-bottom:0.5rem;">
+                            <span>✨</span> Failure Diagnosis & Action Plan
+                        </div>
+                        <div id="explain-content" style="font-size:0.88rem; color:var(--text-main); line-height:1.6; white-space:pre-line;"></div>
+                    </div>
+
+                    <div id="gate-banner" class="gate-card-hero">
+                        <div class="gate-hero-headline" id="gate-headline">
+                            <span>⏳</span>
+                            <span>Quality Gate: Evaluating...</span>
+                        </div>
+                        <ul id="gate-reasons" class="gate-reasons-list"></ul>
+                    </div>
+
+                    <div class="section-label">
+                        <span>7-Step CI/CD Verification Timeline</span>
+                        <span style="font-size:0.72rem; color:var(--text-muted); font-family:var(--font-mono);">Real-Time Execution</span>
+                    </div>
+                    <div id="timeline-container" class="timeline-stack"></div>
+
+                    <div id="findings-section" style="display:none;">
+                        <div class="section-label">
+                            <span>Security Vulnerabilities & Policy Violations</span>
+                            <span id="findings-count-badge" class="finding-tag-pill critical">0 Issues</span>
+                        </div>
+                        <div id="findings-container" class="findings-stack"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 TAB 2: LIVE GITHUB MONITOR & GEMINI AI SCANNER
+                 ========================================== -->
+            <div id="view-monitor" class="tab-panel">
+                <div class="hero-banner" style="background:linear-gradient(135deg, rgba(14, 25, 45, 0.95) 0%, rgba(10, 14, 22, 0.9) 100%); border-color:rgba(41, 151, 255, 0.35);">
+                    <div>
+                        <div class="hero-banner-title">
+                            <span class="pulse-indicator" style="background:#2997ff;"></span>
+                            <span style="color:#7dd3fc;">Live GitHub Webhook Monitoring & Gemini AI Scanner</span>
+                        </div>
+                        <div class="hero-banner-desc">
+                            Connect your GitHub repository to DevGate using your live HTTPS Webhook payload. We verify pushes, scan syntax & AST, gate check, smoke test, and generate brief Gemini AI reports.
+                        </div>
+                    </div>
+                    <div class="hero-controls">
+                        <button class="apple-btn btn-bad-action btn-sm" onclick="sendTestPushPing('bad')">
+                            <span>🚨</span> Test Vulnerable Push
+                        </button>
+                        <button class="apple-btn btn-fix-action btn-sm" onclick="sendTestPushPing('clean')">
+                            <span>✨</span> Test Clean Push
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Beginner Walkthrough Guide -->
+                <div class="config-card" style="margin-bottom:1.5rem; border-color: rgba(41, 151, 255, 0.4); background: linear-gradient(180deg, rgba(14, 25, 45, 0.8) 0%, rgba(13, 17, 23, 0.9) 100%);">
+                    <div class="config-title-row" style="cursor:pointer;" onclick="toggleBeginnerGuide()">
+                        <div style="font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:0.6rem;">
+                            <span style="font-size:1.3rem;">🚀</span>
+                            <span style="color:#7dd3fc;">Beginner Guide: How to connect your real GitHub repository with ngrok</span>
+                        </div>
+                        <span class="badge-status-pill" id="guide-toggle-badge" style="background:rgba(41, 151, 255, 0.2); color:#7dd3fc; border:1px solid rgba(41, 151, 255, 0.3);">COLLAPSE GUIDE ▲</span>
+                    </div>
+                    <div id="beginner-guide-body" style="display:block; margin-top:1rem;">
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:1rem;">
+                            <!-- Step 1 -->
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:1rem;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                                    <span style="background:var(--apple-cyan); color:#000; font-weight:800; font-size:0.75rem; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center;">1</span>
+                                    <strong style="font-size:0.85rem; color:#f0f6fc;">Launch ngrok tunnel</strong>
+                                </div>
+                                <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin:0 0 0.5rem 0;">
+                                    Expose port 8000 to the web. Run in your terminal:
+                                </p>
+                                <div style="background:rgba(0,0,0,0.5); border:1px solid var(--border-dim); border-radius:6px; padding:0.4rem 0.6rem; font-family:var(--font-mono); font-size:0.75rem; color:#7dd3fc; display:flex; justify-content:space-between; align-items:center;">
+                                    <code>ngrok http 8000</code>
+                                    <button class="apple-btn btn-ghost btn-sm" style="padding:2px 6px; font-size:0.7rem;" onclick="copyRawText('ngrok http 8000')">Copy</button>
+                                </div>
+                                <p style="font-size:0.72rem; color:var(--text-muted); margin:0.4rem 0 0 0;">
+                                    Copy your forwarding <code>https://...</code> domain into the box below.
+                                </p>
+                            </div>
+
+                            <!-- Step 2 -->
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:1rem;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                                    <span style="background:var(--apple-cyan); color:#000; font-weight:800; font-size:0.75rem; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center;">2</span>
+                                    <strong style="font-size:0.85rem; color:#f0f6fc;">Add GitHub Webhook</strong>
+                                </div>
+                                <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin:0 0 0.5rem 0;">
+                                    In your GitHub repository &rarr; <strong>Settings &rarr; Webhooks &rarr; Add Webhook</strong>:
+                                </p>
+                                <ul style="font-size:0.74rem; color:var(--text-muted); padding-left:1.1rem; margin:0; line-height:1.45;">
+                                    <li><strong>Payload URL:</strong> Copy the URL below</li>
+                                    <li><strong>Content type:</strong> <code>application/json</code></li>
+                                    <li><strong>Secret:</strong> Paste the HMAC secret</li>
+                                    <li><strong>Events:</strong> Check <em>Pull requests</em> &amp; <em>Pushes</em></li>
+                                </ul>
+                            </div>
+
+                            <!-- Step 3 -->
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:1rem;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                                    <span style="background:var(--apple-cyan); color:#000; font-weight:800; font-size:0.75rem; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center;">3</span>
+                                    <strong style="font-size:0.85rem; color:#f0f6fc;">GitHub Token (PAT)</strong>
+                                </div>
+                                <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin:0 0 0.5rem 0;">
+                                    Generate fine-grained token at <strong>GitHub Settings &rarr; Developer &rarr; Personal access tokens</strong>:
+                                </p>
+                                <ul style="font-size:0.74rem; color:var(--text-muted); padding-left:1.1rem; margin:0; line-height:1.45;">
+                                    <li><code>Pull requests: Read &amp; Write</code> (inline reviews)</li>
+                                    <li><code>Commit statuses: Read &amp; Write</code> (blocks merge)</li>
+                                </ul>
+                                <p style="font-size:0.72rem; color:var(--text-muted); margin:0.4rem 0 0 0;">
+                                    Paste token below & click <strong>Verify PAT</strong>.
+                                </p>
+                            </div>
+
+                            <!-- Step 4 -->
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:1rem;">
+                                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                                    <span style="background:var(--apple-green); color:#000; font-weight:800; font-size:0.75rem; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center;">4</span>
+                                    <strong style="font-size:0.85rem; color:#f0f6fc;">Verify &amp; Test Live</strong>
+                                </div>
+                                <p style="font-size:0.78rem; color:var(--text-secondary); line-height:1.4; margin:0 0 0.5rem 0;">
+                                    Click <strong>"Ping Handshake"</strong> below to test ngrok payload delivery, or push a commit on GitHub!
+                                </p>
+                                <div style="display:flex; gap:0.4rem; margin-top:0.6rem;">
+                                    <button class="apple-btn btn-accent btn-sm" style="flex:1;" onclick="sendTestWebhookPing()">Ping Handshake</button>
+                                    <button class="apple-btn btn-ghost btn-sm" style="flex:1;" onclick="testVerifyToken()">Verify PAT</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two-Column Bento Layout -->
+                <div class="monitor-layout-grid">
+                    <!-- Column 1: Webhook & ngrok Integration Hub -->
+                    <div class="config-card">
+                        <div class="config-title-row">
+                            <div style="font-weight:700; font-size:0.92rem; display:flex; align-items:center; gap:0.5rem;">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--apple-cyan);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                <span>GitHub Webhook &amp; Credentials Setup</span>
+                            </div>
+                            <span class="badge-status-pill live" id="monitor-conn-badge">LIVE ACTIVE</span>
+                        </div>
+
+                        <!-- Target GitHub Repo -->
+                        <div class="input-group">
+                            <label class="input-label">Target GitHub Repository</label>
+                            <input type="text" id="cfg-repo" class="apple-input-box" value="octocat/sample-app" placeholder="owner/repository">
+                        </div>
+
+                        <!-- Public ngrok Domain -->
+                        <div class="input-group">
+                            <label class="input-label">Public / ngrok HTTPS Domain</label>
+                            <input type="text" id="cfg-ngrok" class="apple-input-box" value="http://localhost:8000" placeholder="https://xxxx.ngrok-free.app">
+                        </div>
+
+                        <!-- Smee.io Webhook Proxy URL (Official GitHub Recommended) -->
+                        <div class="input-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label class="input-label" style="margin:0;">Smee.io Webhook URL (Official GitHub Tool)</label>
+                                <span class="badge-status-pill live" style="font-size:0.65rem;">CONNECTED ✓</span>
+                            </div>
+                            <div class="copy-snippet-bar">
+                                <span class="snippet-val" id="disp-smee-url">https://smee.io/p7UW8GZbphsNnqU3</span>
+                                <button class="apple-btn btn-ghost btn-sm" onclick="copySnippet('disp-smee-url')">Copy Smee URL</button>
+                            </div>
+                            <span style="font-size:0.7rem; color:var(--text-muted);">Paste this URL directly into GitHub Webhook Settings. Smee forwards it straight to your localhost!</span>
+                        </div>
+
+                        <!-- Payload URL (ngrok alternative) -->
+                        <div class="input-group">
+                            <label class="input-label">ngrok Payload URL (Alternative)</label>
+                            <div class="copy-snippet-bar">
+                                <span class="snippet-val" id="disp-payload-url">https://eggnog-catty-wildcat.ngrok-free.dev/webhook/github</span>
+                                <button class="apple-btn btn-ghost btn-sm" onclick="copySnippet('disp-payload-url')">Copy ngrok URL</button>
+                            </div>
+                        </div>
+
+                        <!-- Webhook Secret -->
+                        <div class="input-group">
+                            <label class="input-label">Webhook Secret (HMAC SHA-256)</label>
+                            <div class="copy-snippet-bar">
+                                <span class="snippet-val" id="disp-secret">whsec_devgate_supersecret</span>
+                                <button class="apple-btn btn-ghost btn-sm" onclick="generateNewSecret()">New</button>
+                                <button class="apple-btn btn-ghost btn-sm" onclick="copySnippet('disp-secret')">Copy Secret</button>
+                            </div>
+                        </div>
+
+                        <!-- GitHub Personal Access Token (PAT) -->
+                        <div class="input-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <label class="input-label" style="margin:0;">GitHub Personal Access Token (PAT)</label>
+                                <span id="token-status-pill" class="badge-status-pill" style="font-size:0.65rem; padding:0.1rem 0.4rem;">OPTIONAL FOR SIMULATE</span>
+                            </div>
+                            <div style="display:flex; gap:0.4rem; align-items:center;">
+                                <input type="password" id="cfg-github-token" class="apple-input-box" placeholder="ghp_... or github_pat_..." style="flex:1;">
+                                <button class="apple-btn btn-ghost btn-sm" onclick="togglePasswordVisibility('cfg-github-token', this)">Show</button>
+                                <button class="apple-btn btn-ghost btn-sm" onclick="testVerifyToken()">Verify</button>
+                            </div>
+                            <span style="font-size:0.7rem; color:var(--text-muted);">Required for LIVE mode to post commit statuses (`dev-help-console/gate`) and inline PR comments.</span>
+                        </div>
+
+                        <!-- Mode Toggle -->
+                        <div class="input-group">
+                            <label class="input-label">Pipeline Execution Mode</label>
+                            <div style="display:flex; gap:0.5rem;">
+                                <label style="flex:1; display:flex; align-items:center; gap:0.4rem; background:rgba(0,0,0,0.3); border:1px solid var(--border-dim); border-radius:var(--radius-sm); padding:0.5rem 0.75rem; cursor:pointer;">
+                                    <input type="radio" name="mode-select" id="mode-simulate" value="simulate" checked onchange="handleModeChange('simulate')">
+                                    <span style="font-size:0.8rem; font-weight:600; color:var(--text-main);">SIMULATE (Stage Safety Net)</span>
+                                </label>
+                                <label style="flex:1; display:flex; align-items:center; gap:0.4rem; background:rgba(0,0,0,0.3); border:1px solid var(--border-dim); border-radius:var(--radius-sm); padding:0.5rem 0.75rem; cursor:pointer;">
+                                    <input type="radio" name="mode-select" id="mode-live" value="live" onchange="handleModeChange('live')">
+                                    <span style="font-size:0.8rem; font-weight:600; color:#38bdf8;">LIVE (Real GitHub)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Gemini API Key -->
+                        <div class="input-group">
+                            <label class="input-label">Google Gemini API Key (Optional for Live Security Reports)</label>
+                            <input type="password" id="cfg-gemini-key" class="apple-input-box" placeholder="AQ.Ab8... (Defaults to preconfigured key)">
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display:flex; gap:0.5rem; justify-content:space-between; align-items:center; margin-top:0.5rem; flex-wrap:wrap;">
+                            <div style="display:flex; gap:0.4rem;">
+                                <button class="apple-btn btn-ghost btn-sm" onclick="sendTestWebhookPing()">
+                                    <span>📡</span> Ping Handshake
+                                </button>
+                                <button class="apple-btn btn-bad-action btn-sm" onclick="sendTestWebhookPR('bad')">
+                                    <span>🚨</span> Test Bad PR
+                                </button>
+                                <button class="apple-btn btn-fix-action btn-sm" onclick="sendTestWebhookPR('clean')">
+                                    <span>✨</span> Test Fix PR
+                                </button>
+                            </div>
+                            <button class="apple-btn btn-accent" onclick="saveMonitorSettings()">
+                                <span>✓</span> Save Configuration
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Real-time Push Verification Checklist -->
+                    <div class="config-card">
+                        <div class="config-title-row">
+                            <div style="font-weight:700; font-size:0.92rem; display:flex; align-items:center; gap:0.5rem;">
+                                <svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--apple-green);"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                <span>Real-Time Push Verification Stream</span>
+                            </div>
+                            <span class="outcome-badge pass" id="verif-overall-status">STANDBY</span>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:0.65rem;" id="verif-checklist">
+                            <div class="apple-step-row" style="padding:0.6rem 0.85rem;">
+                                <div class="step-bubble passed">✓</div>
+                                <div class="step-details-left">
+                                    <span class="step-name-text" style="font-size:0.82rem;">1. HMAC SHA-256 Webhook Verification</span>
+                                    <span class="step-msg-text" id="chk-hmac">Verified signature via X-Hub-Signature-256 header</span>
+                                </div>
+                            </div>
+
+                            <div class="apple-step-row" style="padding:0.6rem 0.85rem;">
+                                <div class="step-bubble passed">✓</div>
+                                <div class="step-details-left">
+                                    <span class="step-name-text" style="font-size:0.82rem;">2. pytest Suite & Build Execution</span>
+                                    <span class="step-msg-text" id="chk-build">3/3 unit tests executed with zero regressions</span>
+                                </div>
+                            </div>
+
+                            <div class="apple-step-row" style="padding:0.6rem 0.85rem;">
+                                <div class="step-bubble passed" id="chk-bubble-syntax">✓</div>
+                                <div class="step-details-left">
+                                    <span class="step-name-text" style="font-size:0.82rem;">3. Syntax & AST Structural Analysis</span>
+                                    <span class="step-msg-text" id="chk-syntax">Valid AST tokens & language grammar confirmed</span>
+                                </div>
+                            </div>
+
+                            <div class="apple-step-row" style="padding:0.6rem 0.85rem;">
+                                <div class="step-bubble" id="chk-bubble-gate" style="background:var(--apple-orange-bg); color:#fde047;">⚖️</div>
+                                <div class="step-details-left">
+                                    <span class="step-name-text" style="font-size:0.82rem;">4. Quality Gate Policy Evaluation</span>
+                                    <span class="step-msg-text" id="chk-gate">Awaiting push event to evaluate policy rules</span>
+                                </div>
+                            </div>
+
+                            <div class="apple-step-row" style="padding:0.6rem 0.85rem;">
+                                <div class="step-bubble" id="chk-bubble-smoke" style="background:rgba(255,255,255,0.06); color:var(--text-muted);">🧪</div>
+                                <div class="step-details-left">
+                                    <span class="step-name-text" style="font-size:0.82rem;">5. Real-Time Smoke Test Sandbox</span>
+                                    <span class="step-msg-text" id="chk-smoke">10/10 automated preview endpoint health checks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bento: Multi-Dimensional Breakdown (Files, Languages, Functions, Syntax) -->
+                <div class="bento-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:1.5rem;">
+                    <!-- Files Analyzed -->
+                    <div class="bento-card">
+                        <span class="bento-card-label">Files Changed</span>
+                        <span class="bento-card-value" id="disp-files-count">1</span>
+                        <div id="disp-files-list" style="margin-top:0.4rem; display:flex; flex-direction:column; gap:0.25rem;">
+                            <span class="run-pill-tag mono" style="font-size:0.7rem;">app.py (+20, -0)</span>
+                        </div>
+                    </div>
+
+                    <!-- Language Breakdown -->
+                    <div class="bento-card">
+                        <span class="bento-card-label">Languages Breakdown</span>
+                        <div class="lang-progress-bar" id="lang-bar">
+                            <div class="lang-segment" style="width:100%; background:#38bdf8;"></div>
+                        </div>
+                        <div class="lang-pills-row" id="lang-pills">
+                            <span class="lang-pill"><span class="lang-color-dot" style="background:#38bdf8;"></span> Python: 100%</span>
+                        </div>
+                    </div>
+
+                    <!-- Functions Touched -->
+                    <div class="bento-card">
+                        <span class="bento-card-label">Functions & Classes</span>
+                        <span class="bento-card-value" id="disp-func-count">1</span>
+                        <div id="disp-func-list" style="margin-top:0.4rem; display:flex; flex-direction:column; gap:0.25rem;">
+                            <span class="run-pill-tag mono" style="font-size:0.7rem; color:#67e8f9;">def search_users(query)</span>
+                        </div>
+                    </div>
+
+                    <!-- Syntax & AST Check -->
+                    <div class="bento-card">
+                        <span class="bento-card-label">Syntax & AST Status</span>
+                        <span class="bento-card-value" id="disp-syntax-status" style="color:var(--apple-green);">Valid</span>
+                        <span class="bento-card-sub" id="disp-syntax-sub">No AST parse errors</span>
+                    </div>
+                </div>
+
+                <!-- Google Gemini AI Diagnostic & Remediation Report -->
+                <div class="gemini-report-card" id="gemini-report-box">
+                    <div class="gemini-header-row">
+                        <div>
+                            <div style="font-size:1.1rem; font-weight:800; color:#fff; display:flex; align-items:center; gap:0.55rem;">
+                                <span style="font-size:1.3rem;">✨</span>
+                                <span>Google Gemini AI Diagnostic & Remediation Report</span>
+                            </div>
+                            <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.2rem;" id="gemini-model-source">
+                                Engine: Google Gemini 1.5 Flash (AST-Aware DevOps Security)
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span class="outcome-badge fail" id="gemini-risk-badge" style="font-size:0.75rem; padding:0.25rem 0.75rem;">RISK: CRITICAL</span>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="exportGeminiReport()">Export Report</button>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.4); border:1px solid var(--border-dim); border-radius:var(--radius-sm); padding:1rem; margin-bottom:1rem;">
+                        <div style="font-size:0.74rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.3rem;">Executive Summary</div>
+                        <div id="gemini-summary-text" style="font-size:0.9rem; color:var(--text-main); line-height:1.6;">
+                            Automated quality gate blocked push to main. Detected critical SQL injection vulnerability in search_users() and hardcoded API token committed in source code.
+                        </div>
+                    </div>
+
+                    <!-- Remediation Patch Box -->
+                    <div>
+                        <div style="font-size:0.74rem; font-weight:700; color:var(--apple-green); text-transform:uppercase; margin-bottom:0.4rem; display:flex; align-items:center; justify-content:space-between;">
+                            <span>Remediation Code Patch (1-Click Fix)</span>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="copySnippet('gemini-patch-code')">Copy Patch</button>
+                        </div>
+                        <div class="code-fix-box">
+                            <pre id="gemini-patch-code"># 1. Parameterize raw SQL queries with tuples:
+cursor.execute("SELECT * FROM users WHERE name LIKE ?", (f"%{query}%",))
+
+# 2. Extract API credentials from environment variables:
+import os
+API_KEY = os.getenv("API_KEY", "")</pre>
+                        </div>
+                </div>
+
+                <!-- Real-time Webhook Deliveries & Payload Inspector -->
+                <div class="config-card" style="margin-bottom:1.5rem;">
+                    <div class="config-title-row">
+                        <div style="font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:0.5rem;">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--apple-cyan);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>Live ngrok Webhook Deliveries &amp; Payload Inspector</span>
+                            <span class="dock-count-badge" id="webhook-delivery-count">0</span>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <button class="apple-btn btn-ghost btn-sm" onclick="sendTestWebhookPing()">
+                                <span>📡</span> Send Test Ping
+                            </button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="fetchWebhookHistory()">
+                                <span>↻</span> Refresh
+                            </button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="clearWebhookHistory()">
+                                <span>🗑️</span> Clear History
+                            </button>
+                        </div>
+                    </div>
+                    <div style="margin-top:0.5rem; overflow-x:auto;">
+                        <table style="width:100%; font-size:0.8rem; border-collapse:collapse;" id="webhook-events-table">
+                            <thead>
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-muted); text-align:left;">
+                                    <th style="padding:0.6rem 0.5rem;">Time</th>
+                                    <th style="padding:0.6rem 0.5rem;">Event</th>
+                                    <th style="padding:0.6rem 0.5rem;">Delivery ID</th>
+                                    <th style="padding:0.6rem 0.5rem;">Repository</th>
+                                    <th style="padding:0.6rem 0.5rem;">Sender</th>
+                                    <th style="padding:0.6rem 0.5rem;">HMAC SHA-256</th>
+                                    <th style="padding:0.6rem 0.5rem; text-align:right;">Payload</th>
+                                </tr>
+                            </thead>
+                            <tbody id="webhook-events-body">
+                                <tr>
+                                    <td colspan="7" style="padding:1.5rem; text-align:center; color:var(--text-muted);">
+                                        Awaiting incoming GitHub webhook payloads via ngrok. Click "Send Test Ping" or trigger an event in GitHub.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 TAB 3: CHECK LOGS TERMINAL
+                 ========================================== -->
+            <div id="view-checks" class="tab-panel">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-traffic-lights">
+                            <span class="traffic-light close"></span>
+                            <span class="traffic-light minimize"></span>
+                            <span class="traffic-light maximize"></span>
+                            <span class="terminal-title-text" style="margin-left:0.5rem;">check-runs.log — CI/CD Step Stream</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <input type="text" id="check-search" class="terminal-search-box" placeholder="Filter check logs..." oninput="filterLogs('check')">
+                            <div class="filter-pill-btn active" onclick="setLogFilter('check', 'all', this)">All</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('check', 'success', this)">Passed</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('check', 'error', this)">Failed</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('check', 'warn', this)">Warnings</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('check', 'debug', this)">Debug</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.45rem;">
+                            <label style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:0.35rem; cursor:pointer;">
+                                <input type="checkbox" id="check-autoscroll" checked> Auto-scroll
+                            </label>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="exportLogs('check', 'txt')">Export .txt</button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="exportLogs('check', 'json')">Export JSON</button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="clearLogs('check')">Clear</button>
+                        </div>
+                    </div>
+                    <div id="check-logs-window" class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="line-ts">00:00:00.000</span>
+                            <span class="line-badge info">INFO</span>
+                            <span class="line-scope">[CI/CD ENGINE]</span>
+                            <span class="line-text">Pipeline check console ready. Run a simulation to stream live step execution logs.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 TAB 4: PR LOGS TERMINAL
+                 ========================================== -->
+            <div id="view-pr" class="tab-panel">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-traffic-lights">
+                            <span class="traffic-light close"></span>
+                            <span class="traffic-light minimize"></span>
+                            <span class="traffic-light maximize"></span>
+                            <span class="terminal-title-text" style="margin-left:0.5rem;">github-pr-events.log — PR Lifecycle Audit</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <input type="text" id="pr-search" class="terminal-search-box" placeholder="Search PR logs..." oninput="filterLogs('pr')">
+                            <div class="filter-pill-btn active" onclick="setLogFilter('pr', 'all', this)">All Events</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('pr', 'webhook', this)">Webhooks</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('pr', 'status', this)">Commit Status</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.45rem;">
+                            <button class="apple-btn btn-ghost btn-sm" onclick="openDiffModal()">Inspect Diff</button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="exportLogs('pr', 'json')">Export JSON</button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="clearLogs('pr')">Clear</button>
+                        </div>
+                    </div>
+                    <div id="pr-logs-window" class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="line-ts">00:00:00.000</span>
+                            <span class="line-badge info">INFO</span>
+                            <span class="line-scope">[GITHUB GATEWAY]</span>
+                            <span class="line-text">PR event listener initialized for octocat/sample-app. Awaiting webhooks.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 TAB 5: GATEWAY SIMULATION LOGS
+                 ========================================== -->
+            <div id="view-gateway" class="tab-panel">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="terminal-traffic-lights">
+                            <span class="traffic-light close"></span>
+                            <span class="traffic-light minimize"></span>
+                            <span class="traffic-light maximize"></span>
+                            <span class="terminal-title-text" style="margin-left:0.5rem;">gateway-event-bus.log — SSE Broadcast Stream</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <input type="text" id="gw-search" class="terminal-search-box" placeholder="Search gateway stream..." oninput="filterLogs('gw')">
+                            <div class="filter-pill-btn active" onclick="setLogFilter('gw', 'all', this)">All</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('gw', 'gate', this)">Gate Verdicts</div>
+                            <div class="filter-pill-btn" onclick="setLogFilter('gw', 'findings', this)">Findings</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:0.45rem;">
+                            <button class="apple-btn btn-ghost btn-sm" onclick="exportLogs('gw', 'json')">Export JSON</button>
+                            <button class="apple-btn btn-ghost btn-sm" onclick="clearLogs('gw')">Clear</button>
+                        </div>
+                    </div>
+                    <div id="gw-logs-window" class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="line-ts">00:00:00.000</span>
+                            <span class="line-badge info">INFO</span>
+                            <span class="line-scope">[GATEWAY BUS]</span>
+                            <span class="line-text">Event bus connected. Listening for asynchronous pipeline simulation events.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 TAB 6: APPLE FLOWCHARTS
+                 ========================================== -->
+            <div id="view-flow" class="tab-panel">
+                <div class="flowchart-bento">
+                    <div class="flow-switch-bar">
+                        <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted); margin-right:0.5rem; text-transform:uppercase;">Flow Diagrams:</span>
+                        <button id="btn-flow-pipeline" class="apple-btn btn-accent btn-sm" onclick="selectFlowChart('pipeline')">CI/CD Pipeline Flow</button>
+                        <button id="btn-flow-gate" class="apple-btn btn-ghost btn-sm" onclick="selectFlowChart('gate')">Quality Gate Decision Tree</button>
+                        <button id="btn-flow-security" class="apple-btn btn-ghost btn-sm" onclick="selectFlowChart('security')">AI Security Detection & Fix Flow</button>
+                    </div>
+
+                    <div id="flowchart-pipeline" style="display:flex; flex-direction:column; align-items:center; gap:1.25rem; min-width:720px;">
+                        <div class="flow-node-box" id="fnode-webhook" onclick="jumpToStep('webhook_received')">
+                            <div class="node-label-title">1. Webhook Received</div>
+                            <div class="node-label-sub">HMAC Signature & Payload Parse</div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div style="display:flex; gap:1.5rem; justify-content:center;">
+                            <div class="flow-node-box" id="fnode-build" onclick="jumpToStep('build_and_tests')">
+                                <div class="node-label-title">2. Build & Unit Tests</div>
+                                <div class="node-label-sub">pytest Test Suite (3/3 Passed)</div>
+                            </div>
+                            <div class="flow-node-box" id="fnode-security" onclick="jumpToStep('security_scan')">
+                                <div class="node-label-title">3. Security Scan</div>
+                                <div class="node-label-sub">Semgrep Static Analysis</div>
+                            </div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div class="flow-node-box" id="fnode-ai" onclick="jumpToStep('ai_review')">
+                            <div class="node-label-title">4. AI & Rule Review</div>
+                            <div class="node-label-sub">Claude AST & Semantic Diff Analysis</div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div class="flow-node-box" id="fnode-gate" onclick="jumpToStep('quality_gate')" style="border-color:var(--apple-purple);">
+                            <div class="node-label-title" style="color:#d8b4fe;">5. Quality Gate Policy Evaluation</div>
+                            <div class="node-label-sub">Deterministic Rules: Steps + Vulnerability Severities</div>
+                        </div>
+                        <div style="display:flex; gap:4.5rem; justify-content:center; width:100%; margin-top:0.5rem;">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                                <span class="outcome-badge pass" style="font-size:0.7rem; padding:0.25rem 0.75rem;">✓ GATE PASS</span>
+                                <div class="flow-stem"></div>
+                                <div class="flow-node-box" id="fnode-deploy" onclick="jumpToStep('staging_deploy')">
+                                    <div class="node-label-title">6. Staging Deploy</div>
+                                    <div class="node-label-sub">Preview Sandbox v1.0.4</div>
+                                </div>
+                                <div class="flow-stem"></div>
+                                <div class="flow-node-box" id="fnode-smoke" onclick="jumpToStep('smoke_tests')">
+                                    <div class="node-label-title">7. Smoke Tests</div>
+                                    <div class="node-label-sub">10/10 Automated Health Checks</div>
+                                </div>
+                                <div class="flow-stem"></div>
+                                <div class="flow-node-box" style="border-color:var(--apple-green);">
+                                    <div class="node-label-title" style="color:var(--apple-green);">PR Ready to Merge</div>
+                                    <div class="node-label-sub">GitHub Commit Status: SUCCESS</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                                <span class="outcome-badge fail" style="font-size:0.7rem; padding:0.25rem 0.75rem;">✗ GATE BLOCKED</span>
+                                <div class="flow-stem"></div>
+                                <div class="flow-node-box" style="border-color:var(--apple-red);">
+                                    <div class="node-label-title" style="color:var(--apple-red);">Deployments Aborted</div>
+                                    <div class="node-label-sub">Prevent Staging & Smoke Deploy</div>
+                                </div>
+                                <div class="flow-stem"></div>
+                                <div class="flow-node-box" style="border-color:var(--apple-red);">
+                                    <div class="node-label-title">GitHub Feedback Dispatched</div>
+                                    <div class="node-label-sub">Inline comments on app.py:16 & FAILURE status</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="flowchart-gate" style="display:none; flex-direction:column; align-items:center; gap:1.25rem; min-width:720px;">
+                        <div class="flow-node-box" style="min-width:300px;">
+                            <div class="node-label-title">Quality Gate Evaluation Engine</div>
+                            <div class="node-label-sub">Inputs: Required Steps + Extracted Security Findings</div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div class="flow-node-box" style="border-color:var(--apple-orange); min-width:300px;">
+                            <div class="node-label-title">1. Did build_and_tests or security_scan fail?</div>
+                        </div>
+                        <div style="display:flex; gap:4rem; justify-content:center; width:100%;">
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
+                                <span class="outcome-badge fail">YES (Failed)</span>
+                                <div class="flow-node-box" style="border-color:var(--apple-red);">
+                                    <div class="node-label-title" style="color:var(--apple-red);">Verdict: FAIL</div>
+                                    <div class="node-label-sub">Rule: required_step_failed</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.75rem;">
+                                <span class="outcome-badge pass">NO (Passed)</span>
+                                <div class="flow-node-box" style="border-color:var(--apple-cyan); min-width:280px;">
+                                    <div class="node-label-title">2. Any Critical or High Findings?</div>
+                                </div>
+                                <div style="display:flex; gap:3rem; margin-top:0.5rem;">
+                                    <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+                                        <span class="outcome-badge fail">YES</span>
+                                        <div class="flow-node-box" style="border-color:var(--apple-red);">
+                                            <div class="node-label-title" style="color:var(--apple-red);">Verdict: FAIL</div>
+                                            <div class="node-label-sub">Rule: high_severity_findings</div>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+                                        <span class="outcome-badge pass">NO</span>
+                                        <div class="flow-node-box" style="border-color:var(--apple-green);">
+                                            <div class="node-label-title" style="color:var(--apple-green);">Verdict: PASS</div>
+                                            <div class="node-label-sub">Ready to ship!</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="flowchart-security" style="display:none; flex-direction:column; align-items:center; gap:1.25rem; min-width:720px;">
+                        <div class="flow-node-box" style="min-width:320px;">
+                            <div class="node-label-title">PR Diff Received (pr_bad.diff)</div>
+                            <div class="node-label-sub">+@app.get("/users/search") implementation</div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div class="flow-node-box" style="border-color:var(--apple-cyan); min-width:320px;">
+                            <div class="node-label-title">Claude 3.5 Sonnet Security Parser</div>
+                            <div class="node-label-sub">Prompt: Detect OWASP Top 10 & CWE-89 Vulnerabilities</div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div style="display:flex; gap:2rem;">
+                            <div class="flow-node-box" style="border-color:var(--apple-red);">
+                                <div class="node-label-title" style="color:var(--apple-red);">SQL Injection in app.py:16</div>
+                                <div class="node-label-sub">f-string query string formatting (Confidence: 99%)</div>
+                            </div>
+                            <div class="flow-node-box" style="border-color:var(--apple-orange);">
+                                <div class="node-label-title" style="color:var(--apple-orange);">Hardcoded Secret in app.py:13</div>
+                                <div class="node-label-sub">Static API Key 'sk-1234...' in code (Confidence: 98%)</div>
+                            </div>
+                        </div>
+                        <div class="flow-stem"></div>
+                        <div class="flow-node-box" style="border-color:var(--apple-green); min-width:340px;">
+                            <div class="node-label-title" style="color:var(--apple-green);">Automated Fix Code Generated</div>
+                            <div class="node-label-sub">Parameterized queries (?, (val,)) & os.getenv("API_KEY")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Diff Inspector Modal -->
+    <div id="diff-modal" class="modal-overlay" onclick="closeDiffModal(event)">
+        <div class="modal-apple-card" onclick="event.stopPropagation()">
+            <div class="modal-header-apple">
+                <div style="font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:0.5rem;">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <span>Pull Request Unified Diff Inspector</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <button class="apple-btn btn-ghost btn-sm" onclick="loadDiffContent('bad')">Bad PR Diff</button>
+                    <button class="apple-btn btn-ghost btn-sm" onclick="loadDiffContent('fixed')">Fixed PR Diff</button>
+                    <button class="apple-btn btn-ghost btn-sm" onclick="closeDiffModal()">✕</button>
+                </div>
+            </div>
+            <div id="diff-viewer-content" class="diff-code-window">Loading diff...</div>
+    </div>
+
+    <!-- Webhook Payload Inspector Modal -->
+    <div id="payload-modal" class="modal-overlay" onclick="closePayloadModal(event)">
+        <div class="modal-apple-card" style="max-width:750px;" onclick="event.stopPropagation()">
+            <div class="modal-header-apple">
+                <div style="font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:0.6rem;">
+                    <span class="badge-status-pill live" id="modal-payload-event">PING</span>
+                    <span id="modal-payload-title">Webhook Payload Delivery</span>
+                </div>
+                <button class="apple-btn btn-ghost btn-sm" onclick="closePayloadModal()">✕</button>
+            </div>
+            <div style="padding:1.25rem; overflow-y:auto; max-height:75vh; background:#08090d; display:flex; flex-direction:column; gap:1rem;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                        <span class="input-label" style="margin:0;">HTTP Headers</span>
+                        <button class="apple-btn btn-ghost btn-sm" style="padding:2px 8px; font-size:0.72rem;" onclick="copySnippet('modal-headers-code')">Copy Headers</button>
+                    </div>
+                    <pre id="modal-headers-code" style="background:rgba(0,0,0,0.5); padding:0.75rem; border-radius:8px; font-family:var(--font-mono); font-size:0.75rem; color:#7dd3fc; overflow-x:auto; margin:0; border:1px solid var(--border-dim);"></pre>
+                </div>
+
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                        <span class="input-label" style="margin:0;">Parsed JSON Body</span>
+                        <button class="apple-btn btn-ghost btn-sm" style="padding:2px 8px; font-size:0.72rem;" onclick="copySnippet('modal-payload-code')">Copy JSON</button>
+                    </div>
+                    <pre id="modal-payload-code" style="background:rgba(0,0,0,0.5); padding:0.75rem; border-radius:8px; font-family:var(--font-mono); font-size:0.75rem; color:#a7f3d0; overflow-x:auto; margin:0; border:1px solid var(--border-dim); max-height:380px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Stack -->
+    <div id="toast-container" class="apple-toast-stack"></div>
+
+    <script>
+        /* ========================================================
+           STATE & CONSTANTS
+           ======================================================== */
+        const STEP_DEFINITIONS = [
+            { name: "webhook_received", label: "Webhook received" },
+            { name: "build_and_tests", label: "Build and tests" },
+            { name: "security_scan", label: "Security scan" },
+            { name: "ai_review", label: "AI and rule review" },
+            { name: "quality_gate", label: "Quality gate" },
+            { name: "staging_deploy", label: "Staging deploy" },
+            { name: "smoke_tests", label: "Smoke tests" }
+        ];
+
+        let state = {
+            theme: "apple-dark",
+            currentView: "dashboard",
+            runs: [],
+            currentRunId: null,
+            eventSource: null,
+            monitor: {
+                repo: "octocat/sample-app",
+                webhook_url: "http://localhost:8000/webhook/github",
+                secret: "whsec_devgate_supersecret",
+                ngrok_url: "http://localhost:8000"
+            },
+            webhookEvents: [],
+            logs: { check: [], pr: [], gw: [] },
+            filter: { check: "all", pr: "all", gw: "all" },
+            fixtures: {
+                bad_diff: `--- a/app.py\n+++ b/app.py\n@@ -1,10 +1,30 @@\n from fastapi import FastAPI\n+import sqlite3\n \n app = FastAPI()\n \n @app.get("/users")\n def list_users():\n     return {"users": []}\n \n+@app.get("/users/search")\n+def search_users(query: str):\n+    \"\"\"Search users by query - VULNERABLE to SQL injection\"\"\"\n+    API_KEY = "sk-1234567890abcdef"  # HARDCODED SECRET\n+\n+    # SQL injection vulnerability: user input directly in query\n+    sql = f"SELECT * FROM users WHERE name LIKE '%{query}%'"\n+\n+    conn = sqlite3.connect("users.db")\n+    cursor = conn.cursor()\n+    cursor.execute(sql)\n+    results = cursor.fetchall()\n+    conn.close()\n+\n+    return {\n+        "results": results,\n+        "api_key": API_KEY\n+    }\n+\n if __name__ == "__main__":\n     import uvicorn\n     uvicorn.run(app, host="127.0.0.1", port=8000)`,
+                fixed_diff: `--- a/app.py\n+++ b/app.py\n@@ -1,10 +1,35 @@\n from fastapi import FastAPI\n+import sqlite3\n+import os\n \n app = FastAPI()\n \n @app.get("/users")\n def list_users():\n     return {"users": []}\n \n+@app.get("/users/search")\n+def search_users(query: str):\n+    \"\"\"Search users by query - SECURE version\"\"\"\n+    # API key from environment variable\n+    API_KEY = os.getenv("API_KEY", "")\n+\n+    # Use parameterized query to prevent SQL injection\n+    sql = "SELECT * FROM users WHERE name LIKE ?"\n+\n+    conn = sqlite3.connect("users.db")\n+    cursor = conn.cursor()\n+    cursor.execute(sql, (f"%{query}%",))\n+    results = cursor.fetchall()\n+    conn.close()\n+\n+    return {\n+        "results": results\n+    }\n \n if __name__ == "__main__":\n     import uvicorn\n     uvicorn.run(app, host="127.0.0.1", port=8000)`
+            }
+        };
+
+        /* ========================================================
+           INITIALIZATION & EVENT BUS
+           ======================================================== */
+        document.addEventListener("DOMContentLoaded", () => {
+            initSSE();
+            fetchRuns();
+            fetchFixtures();
+            fetchMonitorConfig();
+            fetchWebhookHistory();
+            renderTimelineShell();
+        });
+
+        function toggleTheme() {
+            state.theme = state.theme === "apple-dark" ? "classic" : "apple-dark";
+            document.documentElement.setAttribute("data-theme", state.theme);
+            document.getElementById("theme-label-text").textContent = state.theme === "apple-dark" ? "Classic UI" : "Apple Dark";
+            showToast(`Switched to ${state.theme === "apple-dark" ? "Apple Dark" : "Classic Engineering"} UI`);
+        }
+
+        function switchView(viewName) {
+            state.currentView = viewName;
+            document.querySelectorAll(".dock-item").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+
+            const dockItem = document.getElementById(`dock-${viewName}`);
+            const panel = document.getElementById(`view-${viewName}`);
+            if (dockItem) dockItem.classList.add("active");
+            if (panel) panel.classList.add("active");
+            if (viewName === "monitor") fetchWebhookHistory();
+        }
+
+        function updateModeBadge(mode) {
+            const badge = document.getElementById("mode-badge");
+            const text = document.getElementById("mode-text");
+            if (!badge || !text) return;
+            const isLive = mode === "live";
+            badge.className = `badge-status-pill ${isLive ? 'live' : 'simulate'}`;
+            text.textContent = isLive ? 'LIVE' : 'SIMULATE';
+        }
+
+        function handleModeChange(mode) {
+            updateModeBadge(mode);
+            showToast(`Mode switched to ${mode.toUpperCase()}`);
+        }
+
+        function initSSE() {
+            try {
+                if (state.eventSource) state.eventSource.close();
+                state.eventSource = new EventSource("/api/events");
+
+                state.eventSource.addEventListener("connected", () => {
+                    logGatewayEvent("INFO", "SSE", "Connected to live SSE Event Bus at /api/events");
+                });
+
+                state.eventSource.addEventListener("run_created", (e) => {
+                    const data = JSON.parse(e.data);
+                    logGatewayEvent("INFO", "RUN", `Run created: ${data.pr_title || data.id}`);
+                    logPREvent("INFO", "WEBHOOK", `Received PR #${data.pr_number || 42} from @${data.author || 'alice'}: ${data.pr_title}`);
+                    fetchRuns();
+                });
+
+                state.eventSource.addEventListener("webhook_received", (e) => {
+                    const data = JSON.parse(e.data);
+                    logGatewayEvent("INFO", "WEBHOOK", `Live GitHub Webhook [${data.event}] received via ngrok: ${data.summary || data.event}`);
+                    logPREvent("INFO", "WEBHOOK", `Delivery ID ${data.delivery_id}: ${data.summary || data.event}`);
+                    fetchWebhookHistory();
+                    showToast(`⚡ Incoming GitHub Webhook: ${data.event}`, "info");
+                });
+
+                state.eventSource.addEventListener("github_push_verified", (e) => {
+                    const data = JSON.parse(e.data);
+                    handleLivePushVerified(data);
+                });
+
+                state.eventSource.addEventListener("step_updated", (e) => {
+                    const data = JSON.parse(e.data);
+                    updateStepInUI(data);
+                    const level = data.status === "failed" ? "ERROR" : data.status === "passed" ? "SUCCESS" : "INFO";
+                    logCheckEvent(level, data.name, data.message || `Status changed to ${data.status}`);
+                    logGatewayEvent("DEBUG", "STEP", `${data.name} -> ${data.status}`);
+                });
+
+                state.eventSource.addEventListener("finding_added", (e) => {
+                    const data = JSON.parse(e.data);
+                    const f = data.finding;
+                    logCheckEvent(f.severity === "critical" || f.severity === "high" ? "ERROR" : "WARN", "ai_review", `Vulnerability caught: [${f.severity.toUpperCase()}] ${f.title} in ${f.file}:${f.line}`);
+                    logGatewayEvent("WARN", "FINDING", `Vulnerability detected: ${f.title}`);
+                    if (state.currentRunId === data.run_id) fetchRunDetails(data.run_id);
+                });
+
+                state.eventSource.addEventListener("gate_set", (e) => {
+                    const data = JSON.parse(e.data);
+                    const outcome = data.outcome;
+                    const lv = outcome === "fail" ? "ERROR" : outcome === "warn" ? "WARN" : "SUCCESS";
+                    logCheckEvent(lv, "quality_gate", `Quality gate set to: ${outcome.toUpperCase()}`);
+                    logPREvent(lv, "STATUS", `Commit status check posted: outcome=${outcome.toUpperCase()}`);
+                    logGatewayEvent(lv, "GATE", `Quality gate resolved: ${outcome.toUpperCase()}`);
+                    if (state.currentRunId === data.run_id) fetchRunDetails(data.run_id);
+                });
+
+                state.eventSource.addEventListener("run_updated", (e) => {
+                    fetchRuns();
+                    if (state.currentRunId) fetchRunDetails(state.currentRunId);
+                });
+
+                state.eventSource.addEventListener("reset", () => {
+                    handleResetUI();
+                });
+
+                state.eventSource.onerror = () => {};
+            } catch (err) {}
+        }
+
+        /* ========================================================
+           CUSTOM GITHUB MONITORING & GEMINI LOGIC
+           ======================================================== */
+        async function fetchMonitorConfig() {
+            try {
+                const res = await fetch("/api/monitor/config");
+                if (res.ok) {
+                    const cfg = await res.json();
+                    state.monitor = cfg;
+                    document.getElementById("cfg-repo").value = cfg.repo || "octocat/sample-app";
+                    document.getElementById("cfg-ngrok").value = cfg.ngrok_url || cfg.webhook_url.replace('/webhook/github', '');
+                    document.getElementById("disp-payload-url").textContent = cfg.webhook_url;
+                    document.getElementById("disp-secret").textContent = cfg.secret;
+
+                    if (cfg.demo_mode) {
+                        const isLive = cfg.demo_mode === "live";
+                        const liveRadio = document.getElementById("mode-live");
+                        const simRadio = document.getElementById("mode-simulate");
+                        if (liveRadio && simRadio) {
+                            liveRadio.checked = isLive;
+                            simRadio.checked = !isLive;
+                        }
+                        updateModeBadge(cfg.demo_mode);
+                    }
+
+                    const tokenStatus = document.getElementById("token-status-pill");
+                    if (tokenStatus) {
+                        if (cfg.github_token_configured) {
+                            tokenStatus.className = "badge-status-pill live";
+                            tokenStatus.textContent = `CONFIGURED (${cfg.github_token_masked})`;
+                            document.getElementById("cfg-github-token").placeholder = `Token saved (${cfg.github_token_masked})`;
+                        } else {
+                            tokenStatus.className = "badge-status-pill";
+                            tokenStatus.textContent = "OPTIONAL FOR SIMULATE";
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function saveMonitorSettings() {
+            const repo = document.getElementById("cfg-repo").value.trim();
+            const ngrok_url = document.getElementById("cfg-ngrok").value.trim();
+            const secret = document.getElementById("disp-secret").textContent.trim();
+            const gemini_api_key = document.getElementById("cfg-gemini-key").value.trim();
+            const github_token = document.getElementById("cfg-github-token").value.trim();
+            const demo_mode = document.querySelector('input[name="mode-select"]:checked')?.value || "simulate";
+
+            const payload = { repo, ngrok_url, secret, demo_mode };
+            if (gemini_api_key) payload.gemini_api_key = gemini_api_key;
+            if (github_token) payload.github_token = github_token;
+
+            try {
+                const res = await fetch("/api/monitor/setup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById("disp-payload-url").textContent = data.config.webhook_url;
+                    updateModeBadge(demo_mode);
+                    showToast("Webhook configuration saved & active in .env!", "success");
+                    logGatewayEvent("INFO", "CONFIG", `Updated custom GitHub repository: ${repo} via ${ngrok_url} (mode: ${demo_mode.toUpperCase()})`);
+                    fetchMonitorConfig();
+                }
+            } catch (e) {
+                showToast("Configuration saved locally", "info");
+            }
+        }
+
+        async function testVerifyToken() {
+            const token = document.getElementById("cfg-github-token").value.trim();
+            const repo = document.getElementById("cfg-repo").value.trim();
+            if (!token) {
+                showToast("Please enter a GitHub Personal Access Token first", "error");
+                return;
+            }
+
+            showToast("Verifying GitHub token permissions...", "info");
+            try {
+                const res = await fetch("/api/github/verify-token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ token, repo })
+                });
+                const data = await res.json();
+                const pill = document.getElementById("token-status-pill");
+                if (data.valid) {
+                    showToast(`PAT Verified! Authenticated as @${data.user || 'developer'} with repo access.`, "success");
+                    logGatewayEvent("SUCCESS", "GITHUB", `PAT verified for user ${data.user} on ${repo}`);
+                    if (pill) {
+                        pill.className = "badge-status-pill live";
+                        pill.textContent = "✓ VERIFIED (Read/Write)";
+                    }
+                } else {
+                    showToast(`GitHub Token Issue: ${data.error || 'Invalid or insufficient permissions'}`, "error");
+                    logGatewayEvent("ERROR", "GITHUB", `PAT verification failed: ${data.error}`);
+                    if (pill) {
+                        pill.className = "badge-status-pill fail";
+                        pill.textContent = "✕ INVALID / NO ACCESS";
+                    }
+                }
+            } catch (e) {
+                showToast("Error connecting to token verification endpoint", "error");
+            }
+        }
+
+        async function fetchWebhookHistory() {
+            try {
+                const res = await fetch("/api/webhooks/history");
+                if (res.ok) {
+                    const data = await res.json();
+                    state.webhookEvents = data.events || [];
+                    renderWebhookHistoryTable();
+                }
+            } catch (e) {}
+        }
+
+        function renderWebhookHistoryTable() {
+            const tbody = document.getElementById("webhook-events-body");
+            const countBadge = document.getElementById("webhook-delivery-count");
+            if (countBadge) countBadge.textContent = state.webhookEvents.length;
+            if (!tbody) return;
+
+            if (!state.webhookEvents || state.webhookEvents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding:1.5rem; text-align:center; color:var(--text-muted);">Awaiting incoming GitHub webhook payloads via ngrok. Click "Send Test Ping" or trigger an event in GitHub.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = state.webhookEvents.map(evt => {
+                const sigBadge = evt.signature_valid 
+                    ? `<span class="outcome-badge pass" style="font-size:0.65rem;">✓ Valid HMAC</span>`
+                    : `<span class="outcome-badge fail" style="font-size:0.65rem;">✕ Invalid Sig</span>`;
+                const evtBadge = evt.event === 'ping' 
+                    ? `<span class="badge-status-pill info" style="font-size:0.68rem;">PING</span>`
+                    : evt.event === 'pull_request'
+                    ? `<span class="badge-status-pill live" style="font-size:0.68rem;">PULL_REQUEST</span>`
+                    : `<span class="badge-status-pill warn" style="font-size:0.68rem;">${(evt.event || 'PUSH').toUpperCase()}</span>`;
+
+                return `
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.06); transition:background 0.15s ease;">
+                        <td style="padding:0.6rem 0.5rem; font-family:var(--font-mono); color:var(--text-muted); font-size:0.75rem;">${escapeHtml(evt.timestamp || '--:--')}</td>
+                        <td style="padding:0.6rem 0.5rem;">${evtBadge}</td>
+                        <td style="padding:0.6rem 0.5rem; font-family:var(--font-mono); color:#7dd3fc; font-size:0.75rem;">${escapeHtml(evt.delivery_id ? evt.delivery_id.substring(0, 10) : '—')}</td>
+                        <td style="padding:0.6rem 0.5rem; font-size:0.78rem; font-weight:600; color:var(--text-main);">${escapeHtml(evt.repo || 'octocat/sample-app')}</td>
+                        <td style="padding:0.6rem 0.5rem; font-size:0.75rem; color:var(--text-secondary);">@${escapeHtml(evt.sender || 'developer')}</td>
+                        <td style="padding:0.6rem 0.5rem;">${sigBadge}</td>
+                        <td style="padding:0.6rem 0.5rem; text-align:right;">
+                            <button class="apple-btn btn-ghost btn-sm" style="padding:2px 8px; font-size:0.72rem;" onclick="inspectWebhookPayload('${evt.id}')">Inspect</button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        function inspectWebhookPayload(eventId) {
+            const evt = state.webhookEvents.find(e => e.id === eventId);
+            if (!evt) return;
+
+            document.getElementById("modal-payload-event").textContent = (evt.event || 'PAYLOAD').toUpperCase();
+            document.getElementById("modal-payload-title").textContent = evt.summary || `Webhook Delivery: ${evt.delivery_id}`;
+            document.getElementById("modal-headers-code").textContent = JSON.stringify(evt.headers || {}, null, 2);
+            document.getElementById("modal-payload-code").textContent = JSON.stringify(evt.payload || {}, null, 2);
+            document.getElementById("payload-modal").classList.add("open");
+        }
+
+        function closePayloadModal(e) {
+            if (!e || e.target.classList.contains("modal-overlay") || e.target.tagName === "BUTTON") {
+                document.getElementById("payload-modal").classList.remove("open");
+            }
+        }
+
+        async function sendTestWebhookPing() {
+            showToast("Sending GitHub webhook ping handshake...", "info");
+            try {
+                const res = await fetch("/api/webhooks/test-ping", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ event: "ping" })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(`Ping Handshake Successful! (Zen: "${data.zen}")`, "success");
+                    logGatewayEvent("SUCCESS", "WEBHOOK", `Ping handshake OK: ${data.zen}`);
+                    fetchWebhookHistory();
+                }
+            } catch (e) {
+                showToast("Failed to send ping", "error");
+            }
+        }
+
+        async function sendTestWebhookPR(scenario) {
+            const isBad = scenario === "bad";
+            showToast(`Dispatching ${isBad ? 'vulnerable' : 'fixed'} PR webhook...`, "info");
+            try {
+                const res = await fetch("/api/webhooks/test-ping", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        event: "pull_request",
+                        scenario: scenario,
+                        pr_number: isBad ? 42 : 43
+                    })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(`PR webhook received! Pipeline running (${data.run_id ? data.run_id.substring(0, 8) : 'active'})`, "success");
+                    fetchWebhookHistory();
+                    switchView("dashboard");
+                }
+            } catch (e) {
+                showToast("Failed to dispatch PR webhook", "error");
+            }
+        }
+
+        async function clearWebhookHistory() {
+            try {
+                await fetch("/api/webhooks/clear", { method: "POST" });
+                state.webhookEvents = [];
+                renderWebhookHistoryTable();
+                showToast("Cleared webhook history", "info");
+            } catch (e) {}
+        }
+
+        function togglePasswordVisibility(inputId, btnEl) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            if (input.type === "password") {
+                input.type = "text";
+                btnEl.textContent = "Hide";
+            } else {
+                input.type = "password";
+                btnEl.textContent = "Show";
+            }
+        }
+
+        function toggleBeginnerGuide() {
+            const body = document.getElementById("beginner-guide-body");
+            const badge = document.getElementById("guide-toggle-badge");
+            if (!body) return;
+            if (body.style.display === "none") {
+                body.style.display = "block";
+                if (badge) badge.textContent = "COLLAPSE GUIDE ▲";
+            } else {
+                body.style.display = "none";
+                if (badge) badge.textContent = "SHOW GUIDE ▼";
+            }
+        }
+
+        function copyRawText(text) {
+            navigator.clipboard.writeText(text);
+            showToast("Copied command to clipboard!");
+        }
+
+        function generateNewSecret() {
+            const arr = new Uint8Array(16);
+            window.crypto.getRandomValues(arr);
+            const hex = Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+            document.getElementById("disp-secret").textContent = `whsec_${hex}`;
+            showToast("Generated new cryptographic HMAC secret!");
+        }
+
+        function copySnippet(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                navigator.clipboard.writeText(el.textContent.trim());
+                showToast("Copied to clipboard!");
+            }
+        }
+
+        async function sendTestPushPing(scenario) {
+            const author = "devops-engineer";
+            showToast(`Dispatching live test webhook push (${scenario})...`, "info");
+            logGatewayEvent("INFO", "WEBHOOK", `Simulating incoming GitHub push event with ${scenario} code payload`);
+            logPREvent("INFO", "PUSH", `Received commit push from @${author} on refs/heads/main`);
+
+            try {
+                const res = await fetch("/api/monitor/test-ping", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ scenario, author })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    handleLivePushVerified(data);
+                    return;
+                }
+            } catch (e) {}
+
+            // Client-side simulation fallback
+            const isBad = scenario === "bad";
+            const diff = isBad ? state.fixtures.bad_diff : state.fixtures.fixed_diff;
+            runClientSimulation(scenario);
+            const fakeMetrics = {
+                total_files: 1,
+                files: [{ file: "app.py", additions: 20, deletions: 0, language: "Python" }],
+                language_breakdown: [{ language: "Python", lines: 20, percentage: 100 }],
+                functions_touched: [{ name: "search_users", file: "app.py", args: "query: str", type: "function" }],
+                syntax_status: "Passed",
+                security_flags: isBad ? [{ rule: "CWE-89: SQL Injection", severity: "critical" }, { rule: "CWE-798: Hardcoded Credentials", severity: "high" }] : []
+            };
+            const fakeReport = {
+                summary: isBad ? "Blocked push. Critical SQL Injection and hardcoded credential detected." : "Push verified clean. Ready to ship.",
+                risk_level: isBad ? "Critical" : "Low",
+                gate_recommendation: isBad ? "MERGE_BLOCKED" : "APPROVED",
+                remediation_patch: isBad ? 'cursor.execute("SELECT * FROM users WHERE name LIKE ?", (f"%{query}%",))\nAPI_KEY = os.getenv("API_KEY", "")' : '# Clean'
+            };
+            handleLivePushVerified({
+                event: "push",
+                repo: document.getElementById("cfg-repo").value || "octocat/sample-app",
+                branch: "main",
+                commit: isBad ? "f4c9a1b" : "8e2d7a3",
+                author: author,
+                message: isBad ? "feat: Add user search endpoint" : "fix: Parameterize SQL query and env API key",
+                metrics: fakeMetrics,
+                gemini_report: fakeReport
+            });
+        }
+
+        function handleLivePushVerified(data) {
+            const metrics = data.metrics || {};
+            const report = data.gemini_report || {};
+            const isBlocked = report.gate_recommendation === "MERGE_BLOCKED" || report.risk_level === "Critical";
+
+            // Update Checklist
+            document.getElementById("verif-overall-status").textContent = isBlocked ? "GATE BLOCKED" : "VERIFIED ✓";
+            document.getElementById("verif-overall-status").className = `outcome-badge ${isBlocked ? 'fail' : 'pass'}`;
+            document.getElementById("chk-bubble-gate").className = `step-bubble ${isBlocked ? 'failed' : 'passed'}`;
+            document.getElementById("chk-bubble-gate").textContent = isBlocked ? "✕" : "✓";
+            document.getElementById("chk-gate").textContent = isBlocked ? "Blocked: Critical security policy violations caught" : "Gate open: ship it";
+            document.getElementById("chk-bubble-smoke").className = `step-bubble ${isBlocked ? 'skipped' : 'passed'}`;
+            document.getElementById("chk-bubble-smoke").textContent = isBlocked ? "—" : "✓";
+            document.getElementById("chk-smoke").textContent = isBlocked ? "Skipped: staging deploy was not executed" : "10/10 automated health checks passed";
+
+            // Multi-dimensional breakdown
+            document.getElementById("disp-files-count").textContent = metrics.total_files || (metrics.files ? metrics.files.length : 1);
+            if (metrics.files) {
+                document.getElementById("disp-files-list").innerHTML = metrics.files.map(f =>
+                    `<span class="run-pill-tag mono" style="font-size:0.7rem;">${escapeHtml(f.file)} (+${f.additions}, -${f.deletions})</span>`
+                ).join("");
+            }
+
+            // Language breakdown
+            if (metrics.language_breakdown && metrics.language_breakdown.length > 0) {
+                const colors = ["#2997ff", "#bf5af2", "#30d158", "#ff9f0a", "#ff375f"];
+                document.getElementById("lang-bar").innerHTML = metrics.language_breakdown.map((l, i) =>
+                    `<div class="lang-segment" style="width:${l.percentage}%; background:${colors[i % colors.length]};" title="${l.language}: ${l.percentage}%"></div>`
+                ).join("");
+                document.getElementById("lang-pills").innerHTML = metrics.language_breakdown.map((l, i) =>
+                    `<span class="lang-pill"><span class="lang-color-dot" style="background:${colors[i % colors.length]};"></span> ${escapeHtml(l.language)}: ${l.percentage}%</span>`
+                ).join("");
+            }
+
+            // Functions touched
+            const fns = metrics.functions_touched || [];
+            document.getElementById("disp-func-count").textContent = fns.length;
+            if (fns.length > 0) {
+                document.getElementById("disp-func-list").innerHTML = fns.map(fn =>
+                    `<span class="run-pill-tag mono" style="font-size:0.7rem; color:#67e8f9;">${fn.type === 'class' ? 'class' : 'def'} ${escapeHtml(fn.name)}(${escapeHtml(fn.args || '')})</span>`
+                ).join("");
+            } else {
+                document.getElementById("disp-func-list").innerHTML = `<span style="font-size:0.72rem; color:var(--text-muted);">None detected</span>`;
+            }
+
+            // Syntax Status
+            document.getElementById("disp-syntax-status").textContent = metrics.syntax_status || "Valid";
+            document.getElementById("disp-syntax-status").style.color = metrics.syntax_issues?.length ? "var(--apple-orange)" : "var(--apple-green)";
+
+            // Gemini Report Section
+            document.getElementById("gemini-report-box").style.display = "block";
+            document.getElementById("gemini-model-source").textContent = `Engine: ${report.source || 'Google Gemini 1.5 Flash'}`;
+            document.getElementById("gemini-risk-badge").textContent = `RISK: ${(report.risk_level || 'EVALUATED').toUpperCase()}`;
+            document.getElementById("gemini-risk-badge").className = `outcome-badge ${report.risk_level === 'Critical' || report.risk_level === 'High' ? 'fail' : 'pass'}`;
+            document.getElementById("gemini-summary-text").textContent = report.summary || "Scan complete.";
+            document.getElementById("gemini-patch-code").textContent = report.remediation_patch || "# All checks passed.";
+
+            showToast(`Push ${data.commit || ''} verified. Gemini report ready!`, isBlocked ? "error" : "success");
+        }
+
+        function exportGeminiReport() {
+            const summary = document.getElementById("gemini-summary-text").textContent;
+            const patch = document.getElementById("gemini-patch-code").textContent;
+            const payload = {
+                timestamp: new Date().toISOString(),
+                summary: summary,
+                remediation_patch: patch
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `gemini_security_report_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Gemini security report exported!");
+        }
+
+        /* ========================================================
+           RUNS & PIPELINE DETAILS
+           ======================================================== */
+        async function fetchRuns() {
+            try {
+                const res = await fetch("/api/runs");
+                if (res.ok) {
+                    const data = await res.json();
+                    state.runs = data;
+                    renderRunsList();
+                    if (data.length > 0 && !state.currentRunId) selectRun(data[0].id);
+                }
+            } catch (e) {}
+        }
+
+        async function fetchRunDetails(runId) {
+            try {
+                const res = await fetch(`/api/runs/${runId}`);
+                if (res.ok) {
+                    const run = await res.json();
+                    renderActiveRun(run);
+                }
+            } catch (e) {}
+        }
+
+        async function fetchFixtures() {
+            try {
+                const res = await fetch("/api/demo/fixtures");
+                if (res.ok) state.fixtures = await res.json();
+            } catch (e) {}
+        }
+
+        function renderRunsList() {
+            const list = document.getElementById("runs-list");
+            document.getElementById("runs-count").textContent = state.runs.length;
+            if (state.runs.length === 0) {
+                list.innerHTML = `<li style="padding:1rem; text-align:center; color:var(--text-muted); font-size:0.78rem;">No PR runs recorded.</li>`;
+                return;
+            }
+
+            list.innerHTML = state.runs.map(run => {
+                const isActive = run.id === state.currentRunId ? "active" : "";
+                const outcome = run.gate_outcome || run.status;
+                return `
+                    <li class="run-card ${isActive}" onclick="selectRun('${run.id}')">
+                        <div class="run-card-top">
+                            <span class="run-card-title">${escapeHtml(run.pr_title || run.id)}</span>
+                            <span class="outcome-badge ${outcome}">${outcome}</span>
+                        </div>
+                        <div class="run-card-meta">
+                            <span>#${run.pr_number || 42} by @${escapeHtml(run.author || 'alice')}</span>
+                            <span>${formatTime(run.created_at)}</span>
+                        </div>
+                    </li>
+                `;
+            }).join("");
+        }
+
+        function selectRun(runId) {
+            state.currentRunId = runId;
+            renderRunsList();
+            document.getElementById("empty-state").style.display = "none";
+            document.getElementById("run-detail-content").style.display = "block";
+            fetchRunDetails(runId);
+        }
+
+        function renderActiveRun(run) {
+            document.getElementById("run-title").textContent = `PR #${run.pr_number || 42}: ${run.pr_title || 'Feature pull request'}`;
+            document.getElementById("run-author").textContent = `author: ${run.author || 'alice'}`;
+            document.getElementById("run-sha").textContent = `sha: ${run.head_sha ? run.head_sha.substring(0, 7) : 'a1b2c3d'}`;
+            document.getElementById("run-time").textContent = `time: ${formatTime(run.created_at)}`;
+            document.getElementById("run-mode").textContent = `mode: ${run.mode || 'simulate'}`;
+
+            const steps = run.steps || [];
+            const completedSteps = steps.filter(s => s.status === "passed" || s.status === "failed").length;
+            document.getElementById("kpi-steps").textContent = `${completedSteps}/7`;
+
+            const findings = run.findings || [];
+            document.getElementById("kpi-findings").textContent = findings.length;
+
+            const verdict = run.gate_outcome ? run.gate_outcome.toUpperCase() : (run.status === "running" ? "EVALUATING" : "PENDING");
+            document.getElementById("kpi-gate-verdict").textContent = verdict;
+            document.getElementById("kpi-gate-sub").textContent = run.gate_outcome ? "Deterministic policy" : "Running checks";
+
+            if (run.created_at && run.finished_at) {
+                const durationSec = ((new Date(run.finished_at) - new Date(run.created_at)) / 1000).toFixed(1);
+                document.getElementById("kpi-duration").textContent = `${durationSec}s`;
+            } else {
+                document.getElementById("kpi-duration").textContent = run.status === "running" ? "In progress..." : "—";
+            }
+
+            renderGateBanner(run);
+            renderTimelineSteps(run.steps || []);
+            renderFindings(run.findings || []);
+
+            const explainBtn = document.getElementById("btn-explain-failure");
+            if (run.gate_outcome === "fail") {
+                explainBtn.style.display = "inline-flex";
+            } else {
+                explainBtn.style.display = "none";
+                document.getElementById("explain-box").style.display = "none";
+            }
+        }
+
+        function renderGateBanner(run) {
+            const banner = document.getElementById("gate-banner");
+            const headline = document.getElementById("gate-headline");
+            const reasonsList = document.getElementById("gate-reasons");
+
+            banner.className = "gate-card-hero " + (run.gate_outcome || "");
+
+            if (run.gate_outcome === "pass") {
+                headline.innerHTML = `<span>✅ Quality Gate: PASS — Approved for Staging Deploy & Merge</span>`;
+                reasonsList.innerHTML = `<li class="gate-reason-item">All required test suites, static analyzers, and security policies passed.</li>`;
+            } else if (run.gate_outcome === "fail") {
+                headline.innerHTML = `<span>🚨 Quality Gate: FAIL — Merge Blocked</span>`;
+                let reasons = [];
+                try { reasons = JSON.parse(run.gate_reasons_json || "[]"); } catch (e) {}
+                if (reasons.length === 0 && run.findings) {
+                    reasons = run.findings.filter(f => f.severity === "critical" || f.severity === "high")
+                        .map(f => ({ rule: "high_severity_findings", detail: `${f.title} in ${f.file}:${f.line}` }));
+                }
+                reasonsList.innerHTML = reasons.map(r => `
+                    <li class="gate-reason-item">
+                        <span style="color:var(--apple-red); font-weight:700;">✕</span>
+                        <span>${escapeHtml(r.detail)}</span>
+                    </li>
+                `).join("");
+            } else if (run.gate_outcome === "warn") {
+                headline.innerHTML = `<span>⚠️ Quality Gate: WARN — Review Flags Generated</span>`;
+                reasonsList.innerHTML = `<li class="gate-reason-item">Passed with advisory warnings that do not block merging.</li>`;
+            } else {
+                headline.innerHTML = `<span>⏳ Quality Gate: Evaluating Policies...</span>`;
+                reasonsList.innerHTML = `<li class="gate-reason-item">Waiting for unit tests, security scans, and AI review completion.</li>`;
+            }
+        }
+
+        function renderTimelineShell() {
+            const container = document.getElementById("timeline-container");
+            container.innerHTML = STEP_DEFINITIONS.map(def => `
+                <div class="apple-step-row" id="step-row-${def.name}">
+                    <div class="step-bubble pending" id="step-icon-${def.name}">○</div>
+                    <div class="step-details-left">
+                        <span class="step-name-text">${def.label}</span>
+                        <span class="step-msg-text" id="step-msg-${def.name}">Waiting...</span>
+                    </div>
+                    <div class="step-actions-right">
+                        <span class="step-timing-badge" id="step-time-${def.name}">—</span>
+                        <button class="apple-btn btn-ghost btn-sm" onclick="jumpToStep('${def.name}')">View Logs</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderTimelineSteps(steps) {
+            steps.forEach(step => updateStepInUI(step));
+        }
+
+        function updateStepInUI(step) {
+            const row = document.getElementById(`step-row-${step.name}`);
+            const icon = document.getElementById(`step-icon-${step.name}`);
+            const msg = document.getElementById(`step-msg-${step.name}`);
+            const time = document.getElementById(`step-time-${step.name}`);
+
+            if (!row) return;
+
+            row.className = `apple-step-row ${step.status}`;
+            icon.className = `step-bubble ${step.status}`;
+
+            if (step.status === "passed") icon.textContent = "✓";
+            else if (step.status === "failed") icon.textContent = "✕";
+            else if (step.status === "running") icon.textContent = "⚙";
+            else if (step.status === "skipped") icon.textContent = "—";
+            else icon.textContent = "○";
+
+            if (msg) msg.textContent = step.message || step.status;
+            if (time && step.started_at && step.finished_at) {
+                const dur = ((new Date(step.finished_at) - new Date(step.started_at)) / 1000).toFixed(1);
+                time.textContent = `${dur}s`;
+            } else if (time && step.status === "running") {
+                time.textContent = "running...";
+            }
+
+            const fnode = document.getElementById(`fnode-${step.name.replace('_and_', '').replace('_scan', '').replace('_review', '').replace('_deploy', '').replace('_tests', '')}`);
+            if (fnode) {
+                fnode.className = `flow-node-box ${step.status === 'running' ? 'active-running' : step.status === 'passed' ? 'active-pass' : step.status === 'failed' ? 'active-fail' : ''}`;
+            }
+        }
+
+        function renderFindings(findings) {
+            const section = document.getElementById("findings-section");
+            const container = document.getElementById("findings-container");
+            const badge = document.getElementById("findings-count-badge");
+
+            if (!findings || findings.length === 0) {
+                section.style.display = "none";
+                return;
+            }
+
+            section.style.display = "block";
+            badge.textContent = `${findings.length} Issue${findings.length !== 1 ? 's' : ''}`;
+
+            container.innerHTML = findings.map((f, idx) => `
+                <div class="finding-bento-card ${f.severity}">
+                    <div class="finding-head-row">
+                        <div style="display:flex; align-items:center; gap:0.6rem;">
+                            <span class="finding-tag-pill ${f.severity}">${f.severity}</span>
+                            <span class="finding-headline">${escapeHtml(f.title)}</span>
+                        </div>
+                        <span class="finding-loc-badge">${escapeHtml(f.file)}:${f.line}</span>
+                    </div>
+                    <div class="finding-narrative">${escapeHtml(f.explanation)}</div>
+                    ${f.suggested_fix ? `
+                        <div class="code-fix-box">
+                            <button class="apple-btn btn-ghost btn-sm" style="position:absolute; top:0.5rem; right:0.5rem;" onclick="copyFixText('${idx}')">Copy Fix</button>
+                            <pre id="fix-text-${idx}">${escapeHtml(f.suggested_fix)}</pre>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join("");
+        }
+
+        /* ========================================================
+           INTERACTIVE LOGS ENGINE
+           ======================================================== */
+        function logCheckEvent(level, step, message) {
+            const entry = {
+                time: new Date().toLocaleTimeString() + '.' + String(Date.now() % 1000).padStart(3, '0'),
+                level: level,
+                step: step,
+                message: message
+            };
+            state.logs.check.push(entry);
+            document.getElementById("badge-check-count").textContent = state.logs.check.length;
+            appendLogDOM("check", entry);
+        }
+
+        function logPREvent(level, category, message) {
+            const entry = {
+                time: new Date().toLocaleTimeString() + '.' + String(Date.now() % 1000).padStart(3, '0'),
+                level: level,
+                step: category,
+                message: message
+            };
+            state.logs.pr.push(entry);
+            document.getElementById("badge-pr-count").textContent = state.logs.pr.length;
+            appendLogDOM("pr", entry);
+        }
+
+        function logGatewayEvent(level, bus, message) {
+            const entry = {
+                time: new Date().toLocaleTimeString() + '.' + String(Date.now() % 1000).padStart(3, '0'),
+                level: level,
+                step: bus,
+                message: message
+            };
+            state.logs.gw.push(entry);
+            document.getElementById("badge-gw-count").textContent = state.logs.gw.length;
+            appendLogDOM("gw", entry);
+        }
+
+        function appendLogDOM(type, entry) {
+            const windowEl = document.getElementById(`${type}-logs-window`);
+            if (!windowEl) return;
+
+            const line = document.createElement("div");
+            line.className = "terminal-line";
+
+            const tagClass = entry.level.toLowerCase();
+            const msgClass = tagClass === "error" ? "highlight-error" : tagClass === "success" ? "highlight-success" : tagClass === "warn" ? "highlight-warn" : "";
+
+            line.innerHTML = `
+                <span class="line-ts">${entry.time}</span>
+                <span class="line-badge ${tagClass}">${entry.level}</span>
+                <span class="line-scope">[${entry.step}]</span>
+                <span class="line-text ${msgClass}">${escapeHtml(entry.message)}</span>
+            `;
+            windowEl.appendChild(line);
+
+            const autoScroll = document.getElementById(`${type}-autoscroll`);
+            if (!autoScroll || autoScroll.checked) windowEl.scrollTop = windowEl.scrollHeight;
+        }
+
+        function filterLogs(type) {
+            const query = (document.getElementById(`${type}-search`)?.value || "").toLowerCase();
+            const windowEl = document.getElementById(`${type}-logs-window`);
+            if (!windowEl) return;
+
+            windowEl.innerHTML = "";
+            const currentFilter = state.filter[type];
+
+            const filtered = state.logs[type].filter(entry => {
+                const matchQuery = entry.message.toLowerCase().includes(query) || entry.step.toLowerCase().includes(query);
+                if (currentFilter === "all") return matchQuery;
+                return matchQuery && entry.level.toLowerCase() === currentFilter.toLowerCase();
+            });
+
+            filtered.forEach(entry => appendLogDOM(type, entry));
+        }
+
+        function setLogFilter(type, filterVal, btnEl) {
+            state.filter[type] = filterVal;
+            btnEl.parentElement.querySelectorAll(".filter-pill-btn").forEach(c => c.classList.remove("active"));
+            btnEl.classList.add("active");
+            filterLogs(type);
+        }
+
+        function clearLogs(type) {
+            state.logs[type] = [];
+            const windowEl = document.getElementById(`${type}-logs-window`);
+            if (windowEl) windowEl.innerHTML = "";
+            document.getElementById(`badge-${type}-count`).textContent = "0";
+            showToast(`Cleared ${type} logs`);
+        }
+
+        function exportLogs(type, format) {
+            const logs = state.logs[type];
+            let content = "";
+            let mime = "text/plain";
+            let filename = `devgate_${type}_logs_${Date.now()}`;
+
+            if (format === "json") {
+                content = JSON.stringify(logs, null, 2);
+                mime = "application/json";
+                filename += ".json";
+            } else {
+                content = logs.map(l => `[${l.time}] [${l.level}] [${l.step}] ${l.message}`).join("\n");
+                filename += ".txt";
+            }
+
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`Exported ${logs.length} logs to ${filename}`);
+        }
+
+        function jumpToStep(stepName) {
+            switchView("checks");
+            const searchInput = document.getElementById("check-search");
+            if (searchInput) {
+                searchInput.value = stepName;
+                filterLogs("check");
+            }
+        }
+
+        /* ========================================================
+           FLOWCHARTS NAVIGATION
+           ======================================================== */
+        function selectFlowChart(chartId) {
+            ["pipeline", "gate", "security"].forEach(id => {
+                const flowEl = document.getElementById(`flowchart-${id}`);
+                const btn = document.getElementById(`btn-flow-${id}`);
+                if (flowEl) flowEl.style.display = id === chartId ? "flex" : "none";
+                if (btn) btn.className = id === chartId ? "apple-btn btn-accent btn-sm" : "apple-btn btn-ghost btn-sm";
+            });
+        }
+
+        /* ========================================================
+           SIMULATION ACTIONS & TRIGGERS
+           ======================================================== */
+        async function triggerSimulateBad() {
+            showToast("Simulating Vulnerable Pull Request...", "info");
+            logGatewayEvent("INFO", "SIMULATE", "Initiating bad PR simulation: SQL Injection & Hardcoded API secret");
+            logPREvent("INFO", "PR-OPEN", "alice opened PR #42: 'feat: Add user search endpoint' with planted vulnerabilities");
+
+            try {
+                const res = await fetch("/api/simulate/bad", { method: "POST" });
+                if (res.ok) {
+                    switchView("dashboard");
+                    return;
+                }
+            } catch (e) {}
+
+            runClientSimulation("bad");
+        }
+
+        async function triggerSimulateFixed() {
+            showToast("Simulating Fixed & Hardened Pull Request...", "info");
+            logGatewayEvent("INFO", "SIMULATE", "Initiating fixed PR simulation: Parameterized query & os.getenv");
+            logPREvent("INFO", "PR-SYNC", "alice pushed commit e5f6a7b: 'fix: Use parameterized query and env var'");
+
+            try {
+                const res = await fetch("/api/simulate/fixed", { method: "POST" });
+                if (res.ok) {
+                    switchView("dashboard");
+                    return;
+                }
+            } catch (e) {}
+
+            runClientSimulation("fixed");
+        }
+
+        async function handleExplainFailure() {
+            const explainBox = document.getElementById("explain-box");
+            const content = document.getElementById("explain-content");
+            explainBox.style.display = "block";
+            content.textContent = "Analyzing failures with Claude 3.5 Sonnet & Gemini Engine...";
+
+            try {
+                if (state.currentRunId) {
+                    const res = await fetch(`/api/runs/${state.currentRunId}/explain`, { method: "POST" });
+                    if (res.ok) {
+                        const data = await res.json();
+                        content.textContent = `${data.explanation}\n\nRecommended Fix:\n${data.action_plan}`;
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            content.textContent = `Security Policy Violations Caught by AI Gateway:
+1. SQL Injection (Critical severity in app.py:16):
+User input directly formatted into raw SQL via f-string without parameterization or sanitization.
+Fix:
+cursor.execute("SELECT * FROM users WHERE name LIKE ?", (f"%{query}%",))
+
+2. Hardcoded API Secret (High severity in app.py:13):
+API Key sk-1234567890abcdef is hardcoded directly in application source code.
+Fix:
+API_KEY = os.getenv("API_KEY", "")`;
+        }
+
+        async function handleReset() {
+            try {
+                await fetch("/api/reset", { method: "POST" });
+            } catch (e) {}
+            handleResetUI();
+            showToast("Reset all runs and logs.");
+        }
+
+        function handleResetUI() {
+            state.runs = [];
+            state.currentRunId = null;
+            state.logs.check = [];
+            state.logs.pr = [];
+            state.logs.gw = [];
+            renderRunsList();
+            renderTimelineShell();
+            document.getElementById("empty-state").style.display = "block";
+            document.getElementById("run-detail-content").style.display = "none";
+            document.getElementById("check-logs-window").innerHTML = "";
+            document.getElementById("pr-logs-window").innerHTML = "";
+            document.getElementById("gw-logs-window").innerHTML = "";
+            document.getElementById("badge-check-count").textContent = "0";
+            document.getElementById("badge-pr-count").textContent = "0";
+            document.getElementById("badge-gw-count").textContent = "0";
+        }
+
+        /* Fallback Simulation Engine */
+        async function runClientSimulation(type) {
+            const runId = "sim-" + Date.now();
+            const isBad = type === "bad";
+            const run = {
+                id: runId,
+                repo: "octocat/sample-app",
+                pr_number: 42,
+                pr_title: isBad ? "feat: Add user search endpoint" : "fix: Use parameterized query and env var for search API",
+                author: "alice",
+                head_sha: isBad ? "a1b2c3d4" : "e5f6a7b8",
+                mode: "simulate",
+                status: "running",
+                created_at: new Date().toISOString(),
+                steps: STEP_DEFINITIONS.map(d => ({ name: d.name, status: "pending", message: "Waiting...", started_at: null, finished_at: null })),
+                findings: []
+            };
+
+            state.runs.unshift(run);
+            selectRun(runId);
+            switchView("dashboard");
+
+            const wait = ms => new Promise(r => setTimeout(r, ms));
+
+            // Step 1: Webhook
+            run.steps[0].status = "running";
+            run.steps[0].message = "Verifying HMAC SHA256 signature and JSON headers...";
+            run.steps[0].started_at = new Date().toISOString();
+            updateStepInUI(run.steps[0]);
+            logCheckEvent("INFO", "webhook_received", run.steps[0].message);
+            await wait(400);
+            run.steps[0].status = "passed";
+            run.steps[0].message = "Webhook signature verified and payload parsed";
+            run.steps[0].finished_at = new Date().toISOString();
+            updateStepInUI(run.steps[0]);
+            logCheckEvent("SUCCESS", "webhook_received", run.steps[0].message);
+
+            // Step 2: Build & Tests
+            run.steps[1].status = "running";
+            run.steps[1].message = "Running pytest test suite...";
+            run.steps[1].started_at = new Date().toISOString();
+            updateStepInUI(run.steps[1]);
+            logCheckEvent("INFO", "build_and_tests", run.steps[1].message);
+            await wait(1200);
+            run.steps[1].status = "passed";
+            run.steps[1].message = "All tests passed (3/3 unit tests)";
+            run.steps[1].finished_at = new Date().toISOString();
+            updateStepInUI(run.steps[1]);
+            logCheckEvent("SUCCESS", "build_and_tests", run.steps[1].message);
+
+            // Step 3: Security scan
+            run.steps[2].status = "running";
+            run.steps[2].message = "Running Semgrep security rules...";
+            run.steps[2].started_at = new Date().toISOString();
+            updateStepInUI(run.steps[2]);
+            logCheckEvent("INFO", "security_scan", run.steps[2].message);
+            await wait(1100);
+            run.steps[2].status = "passed";
+            run.steps[2].message = "Semgrep automated scan completed (0 blocking syntax errors)";
+            run.steps[2].finished_at = new Date().toISOString();
+            updateStepInUI(run.steps[2]);
+            logCheckEvent("SUCCESS", "security_scan", run.steps[2].message);
+
+            // Step 4: AI Review
+            run.steps[3].status = "running";
+            run.steps[3].message = "Analyzing diff with Claude 3.5 Sonnet & Gemini...";
+            run.steps[3].started_at = new Date().toISOString();
+            updateStepInUI(run.steps[3]);
+            logCheckEvent("INFO", "ai_review", run.steps[3].message);
+            await wait(1500);
+
+            if (isBad) {
+                run.findings = [
+                    {
+                        severity: "critical",
+                        file: "app.py",
+                        line: 16,
+                        title: "SQL Injection vulnerability",
+                        explanation: "User input from the 'query' parameter is directly interpolated into an SQL query string using an f-string without parameterization or escaping. This allows arbitrary SQL injection (e.g., ' OR '1'='1).",
+                        suggested_fix: "cursor.execute('SELECT * FROM users WHERE name LIKE ?', (f'%{query}%',))",
+                        confidence: 0.99
+                    },
+                    {
+                        severity: "high",
+                        file: "app.py",
+                        line: 13,
+                        title: "Hardcoded secret API key",
+                        explanation: "A static API credential ('sk-1234567890abcdef') is hardcoded directly in application source code. Credentials must be loaded from environment variables and never committed to source control.",
+                        suggested_fix: "API_KEY = os.getenv('API_KEY', '')",
+                        confidence: 0.98
+                    }
+                ];
+                run.steps[3].message = "Analysis complete: 2 finding(s)";
+            } else {
+                run.findings = [
+                    {
+                        severity: "low",
+                        file: "app.py",
+                        line: 11,
+                        title: "Consider adding input validation for search query length",
+                        explanation: "While parameterized queries effectively prevent SQL injection, adding length and character restrictions on user input helps protect database query execution and caching resources.",
+                        suggested_fix: "if len(query) > 100:\n    raise HTTPException(status_code=400, detail='Query too long')",
+                        confidence: 0.85
+                    }
+                ];
+                run.steps[3].message = "Analysis complete: 1 finding(s) (non-blocking)";
+            }
+
+            run.steps[3].status = "passed";
+            run.steps[3].finished_at = new Date().toISOString();
+            updateStepInUI(run.steps[3]);
+            renderFindings(run.findings);
+            logCheckEvent(isBad ? "ERROR" : "INFO", "ai_review", run.steps[3].message);
+
+            // Step 5: Quality Gate
+            run.steps[4].status = "running";
+            run.steps[4].message = "Evaluating quality gate policies...";
+            run.steps[4].started_at = new Date().toISOString();
+            updateStepInUI(run.steps[4]);
+            await wait(400);
+
+            if (isBad) {
+                run.gate_outcome = "fail";
+                run.steps[4].status = "failed";
+                run.steps[4].message = "Gate blocked: 2 critical/high finding(s) detected";
+                run.steps[5].status = "skipped";
+                run.steps[5].message = "Skipped: blocked by quality gate";
+                run.steps[6].status = "skipped";
+                run.steps[6].message = "Skipped: staging deploy was not executed";
+                logCheckEvent("ERROR", "quality_gate", run.steps[4].message);
+                logPREvent("ERROR", "COMMIT-STATUS", "Commit status set to FAILURE: Quality gate blocked");
+            } else {
+                run.gate_outcome = "pass";
+                run.steps[4].status = "passed";
+                run.steps[4].message = "Gate open: ship it";
+                logCheckEvent("SUCCESS", "quality_gate", run.steps[4].message);
+                logPREvent("SUCCESS", "COMMIT-STATUS", "Commit status set to SUCCESS: Quality gate passed");
+
+                // Step 6: Deploy
+                run.steps[5].status = "running";
+                run.steps[5].message = "Deploying artifact to staging preview...";
+                run.steps[5].started_at = new Date().toISOString();
+                updateStepInUI(run.steps[5]);
+                logCheckEvent("INFO", "staging_deploy", run.steps[5].message);
+                await wait(1400);
+                run.steps[5].status = "passed";
+                run.steps[5].message = "Deployed to preview staging environment (internal v1.0.4)";
+                run.steps[5].finished_at = new Date().toISOString();
+                updateStepInUI(run.steps[5]);
+                logCheckEvent("SUCCESS", "staging_deploy", run.steps[5].message);
+
+                // Step 7: Smoke
+                run.steps[6].status = "running";
+                run.steps[6].message = "Running automated smoke test suite...";
+                run.steps[6].started_at = new Date().toISOString();
+                updateStepInUI(run.steps[6]);
+                logCheckEvent("INFO", "smoke_tests", run.steps[6].message);
+                await wait(800);
+                run.steps[6].status = "passed";
+                run.steps[6].message = "10/10 health checks & smoke tests verified";
+                run.steps[6].finished_at = new Date().toISOString();
+                updateStepInUI(run.steps[6]);
+                logCheckEvent("SUCCESS", "smoke_tests", run.steps[6].message);
+            }
+
+            run.steps[4].finished_at = new Date().toISOString();
+            run.status = "finished";
+            run.finished_at = new Date().toISOString();
+            renderActiveRun(run);
+            renderRunsList();
+            showToast(isBad ? "🚨 Gate Blocked Bad PR" : "✅ Gate Passed Fixed PR", isBad ? "error" : "success");
+        }
+
+        /* ========================================================
+           DIFF VIEWER MODAL
+           ======================================================== */
+        function openDiffModal() {
+            document.getElementById("diff-modal").classList.add("open");
+            loadDiffContent("bad");
+        }
+
+        function closeDiffModal(e) {
+            if (!e || e.target.classList.contains("modal-overlay") || e.target.tagName === "BUTTON") {
+                document.getElementById("diff-modal").classList.remove("open");
+            }
+        }
+
+        function loadDiffContent(type) {
+            const raw = type === "fixed" ? state.fixtures.fixed_diff : state.fixtures.bad_diff;
+            const container = document.getElementById("diff-viewer-content");
+            container.innerHTML = raw.split("\n").map(line => {
+                let cls = "diff-code-line";
+                if (line.startsWith("+") && !line.startsWith("+++")) cls += " add";
+                else if (line.startsWith("-") && !line.startsWith("---")) cls += " del";
+                else if (line.startsWith("@@") || line.startsWith("---") || line.startsWith("+++")) cls += " meta";
+                return `<span class="${cls}">${escapeHtml(line)}</span>`;
+            }).join("");
+        }
+
+        /* ========================================================
+           UTILITIES
+           ======================================================== */
+        function copyFixText(idx) {
+            const el = document.getElementById(`fix-text-${idx}`);
+            if (el) {
+                navigator.clipboard.writeText(el.textContent);
+                showToast("Suggested fix code copied to clipboard!");
+            }
+        }
+
+        function showToast(msg, type = "info") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `apple-toast`;
+            const icon = type === "success" ? "✓" : type === "error" ? "✕" : "ℹ";
+            toast.innerHTML = `<span style="color:var(--apple-cyan); font-weight:700;">${icon}</span> <span>${escapeHtml(msg)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateY(15px) scale(0.95)";
+                toast.style.transition = "all 0.3s ease";
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatTime(isoStr) {
+            if (!isoStr) return "--:--";
+            const d = new Date(isoStr);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+    </script>
+</body>
+</html>

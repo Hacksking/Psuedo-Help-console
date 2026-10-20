@@ -1,0 +1,35 @@
+--- a/app.py
++++ b/app.py
+@@ -1,10 +1,35 @@
+ from fastapi import FastAPI
++import sqlite3
++import os
+
+ app = FastAPI()
+
+ @app.get("/users")
+ def list_users():
+     return {"users": []}
+
++@app.get("/users/search")
++def search_users(query: str):
++    """Search users by query - SECURE version"""
++    # API key from environment variable
++    API_KEY = os.getenv("API_KEY", "")
++
++    # Use parameterized query to prevent SQL injection
++    sql = "SELECT * FROM users WHERE name LIKE ?"
++
++    conn = sqlite3.connect("users.db")
++    cursor = conn.cursor()
++    cursor.execute(sql, (f"%{query}%",))
++    results = cursor.fetchall()
++    conn.close()
++
++    return {
++        "results": results
++    }
+
+ if __name__ == "__main__":
+     import uvicorn
+     uvicorn.run(app, host="127.0.0.1", port=8000)

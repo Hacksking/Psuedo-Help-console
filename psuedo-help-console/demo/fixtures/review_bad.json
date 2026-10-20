@@ -1,0 +1,23 @@
+{
+  "summary": "This PR adds a user search endpoint but contains critical security vulnerabilities: an SQL injection via f-string query formatting and a hardcoded secret API key.",
+  "findings": [
+    {
+      "severity": "critical",
+      "file": "app.py",
+      "line": 16,
+      "title": "SQL Injection vulnerability",
+      "explanation": "User input from the 'query' parameter is directly interpolated into an SQL query string using an f-string without parameterization or escaping. This allows arbitrary SQL injection (e.g., `' OR '1'='1`).",
+      "suggested_fix": "cursor.execute('SELECT * FROM users WHERE name LIKE ?', (f'%{query}%',))",
+      "confidence": 0.99
+    },
+    {
+      "severity": "high",
+      "file": "app.py",
+      "line": 13,
+      "title": "Hardcoded secret API key",
+      "explanation": "A static API credential ('sk-1234567890abcdef') is hardcoded directly in application source code. Credentials must be loaded from environment variables and never committed to source control.",
+      "suggested_fix": "API_KEY = os.getenv('API_KEY', '')",
+      "confidence": 0.98
+    }
+  ]
+}
