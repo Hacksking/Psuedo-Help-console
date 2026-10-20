@@ -1,7 +1,8 @@
 <div align="center">
 
-# ⚡ DevGate
+# ⚡ Psuedo Help Console
 ### AI-Powered Pull Request Quality Gate & Live GitHub Monitor
+<sub>Formerly known as <b>DevGate</b></sub>
 
 **Review code changes. Surface risks. Make safer merge decisions.**
 
@@ -23,13 +24,42 @@
 
 ## 🖥️ Project Preview
 
-![DevGate live GitHub monitor dashboard](assets/devgate-dashboard.png)
+![Psuedo Help Console - Live GitHub Monitor](assets/console-live-monitor-setup.png)
 
-> **Dashboard preview:** The Live GitHub Monitor brings webhook configuration, repository credentials, verification steps, and pipeline status into one dark, operations-focused interface.
+> **Live GitHub Monitor:** webhook configuration (smee.io and ngrok), repository credentials, execution mode, and the real-time push verification stream in one dark, operations-focused interface.
 
-## ✨ What is DevGate?
+## 📸 Screenshots
 
-DevGate is a lightweight DevOps quality-gate console that helps teams inspect pull requests before changes move further through a delivery pipeline. It combines GitHub webhook events, CI/CD visibility, static code diagnostics, AI-assisted review, and configurable merge-gate decisions in a browser-based dashboard.
+> Some screenshots were taken while the project was still named **DevGate**; the UI is otherwise identical.
+
+### 🔴 Quality Gate: Merge Blocked
+A pull request containing a SQL injection and a hardcoded API key fails the gate. Staging deploy and smoke tests are skipped automatically.
+
+![Quality gate fail](assets/quality-gate-fail.png)
+
+### 🟢 Pipeline Passing: Safe to Ship
+The fixed pull request passes all seven steps and is deployed to preview staging. Low-severity suggestions are reported as non-blocking.
+
+![Pipeline pass](assets/pipeline-pass.png)
+
+### 🔗 Live GitHub Monitor and Credentials Setup
+Configure the target repository, smee.io / ngrok webhook URLs, webhook secret, GitHub PAT, Simulate vs Live mode, and an optional Gemini API key.
+
+![Live GitHub monitor](assets/live-github-monitor.png)
+
+### ✨ Gemini AI Diagnostic Report and Webhook Inspector
+An AI executive summary, risk level, one-click remediation patch, and a live table of webhook deliveries with HMAC SHA-256 validation status.
+
+![Gemini report and webhook inspector](assets/gemini-report-webhook-inspector.png)
+
+### 📄 Exportable JSON Security Report
+Reports can be exported as JSON for auditing or use in other tools.
+
+![Gemini JSON report](assets/gemini-json-report.png)
+
+## ✨ What is Psuedo Help Console?
+
+Psuedo Help Console (formerly DevGate) is a lightweight DevOps quality-gate console that helps teams inspect pull requests before changes move further through a delivery pipeline. It combines GitHub webhook events, CI/CD visibility, static code diagnostics, AI-assisted review, and configurable merge-gate decisions in a browser-based dashboard.
 
 It supports two operating modes:
 
@@ -101,7 +131,7 @@ When configured, Google Gemini generates diagnostic and remediation guidance alo
 ```mermaid
 flowchart LR
     GH[GitHub Pull Request / Webhook] --> API[FastAPI Backend]
-    UI[DevGate Web Dashboard] <--> API
+    UI[Web Dashboard] <--> API
     API --> SIG[Signature Verification]
     SIG --> DIFF[Diff + Check Run Retrieval]
     DIFF --> PIPE[Seven-Step Pipeline]
@@ -144,7 +174,7 @@ flowchart TD
 
 ### Live workflow
 1. GitHub sends an event to `POST /webhook/github`.
-2. DevGate validates `X-Hub-Signature-256`.
+2. Psuedo Help Console validates `X-Hub-Signature-256`.
 3. Pull-request metadata and the diff are retrieved.
 4. GitHub check runs are polled for configured CI/security checks.
 5. Claude reviews changed code unless replay mode is enabled.
@@ -171,6 +201,7 @@ flowchart TD
 
 ```text
 psuedo-help-console/
+├── assets/                      # README screenshots
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI routes and webhook workflows
@@ -277,7 +308,7 @@ This mode uses local fixture data and simulated pipeline behavior, so you can de
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| `GET` | `/` | Serve the DevGate frontend |
+| `GET` | `/` | Serve the web frontend |
 | `GET` | `/api/config` | Read active mode and model configuration |
 | `GET` | `/api/runs` | List recent pipeline runs |
 | `GET` | `/api/runs/{run_id}` | Read one run, its steps, and findings |
@@ -351,13 +382,13 @@ For bug reports, include reproducible steps, expected behavior, actual behavior,
 
 ## 📄 License
 
-No license information was included in the supplied project notes. Add the license chosen for this repository and update this section before public distribution.
+Add the license chosen for this repository (for example MIT) and update this section before public distribution.
 
 ---
 
 <div align="center">
 
-**DevGate — Make every code change easier to inspect before it ships.**
+**Psuedo Help Console — Make every code change easier to inspect before it ships.**
 
 <sub>Built for clearer reviews, visible quality signals, and safer development workflows.</sub>
 
